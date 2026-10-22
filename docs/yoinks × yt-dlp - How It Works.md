@@ -2,7 +2,7 @@
 
 Oct 17, 2026 · @Ryan
 
-yoinks is a terminal UI around two yt-dlp calls: one `-J` call to read the video's formats, and one download call with a format selector, a forced mp4 container and a custom progress template. Nothing is re-encoded; on most sites the result matches what plain yt-dlp would download, except for the filename and, on YouTube, the container. All code references are to `src/lib/ytdlp.ts` unless noted.
+yoinks is a terminal UI around two yt-dlp calls: one `-J` call to read the video's formats, and one download call with a format selector, a forced mp4 container and a custom progress template. Nothing is re-encoded; on most sites the result matches what plain yt-dlp would download, except for the filename and, on YouTube, the container. Updated 2026-10-22 for the naming changes on `feat/file-naming` (commits `6a44df0`, `59eb927`). All code references are to `src/lib/ytdlp.ts` unless noted.
 
 ## At a glance
 
@@ -42,12 +42,12 @@ These temp files are never deleted by yoinks; macOS cleans old files out of `$TM
 
 ## Format choices
 
-Each picker option is a height plus a container; yoinks never chooses a codec. `buildChoices` (line 143) lists the 8 tallest distinct heights in the probe, then one audio-only option.
+Each picker option is a resolution plus a container; yoinks never chooses a codec. `buildChoices` lists the 8 largest distinct **short sides** in the probe, then one audio-only option. The short side is the height for landscape video and the width for vertical video; orientation is decided once by `isPortrait` in `src/lib/naming.ts`, which the filename suffix also uses. A 720×1280 X post is listed as 720p, not 1280p.
 
 | Picker option | Arguments passed | What it means |
 | --- | --- | --- |
-| `<H>p · mp4` (one per height, up to 8) | `-f "bv*[height=H]+ba/b[height=H]/bv*[height<=H]+ba/b" --merge-output-format mp4` | Best video at exactly H plus best audio; else a combined file at H; else the best at or below H. Always merged into mp4. |
-| `best available · mp4` (only if no format has a height) | `-f "bv*+ba/b" --merge-output-format mp4` | Best video plus best audio, or the best combined file. |
+| `<S>p · mp4` (one per short side, up to 8) | landscape: `-f "bv*[height=S]+ba/b[height=S]/bv*[height<=S]+ba/b" --merge-output-format mp4`; vertical: the same with `width` | Best video at exactly S plus best audio; else a combined file at S; else the best at or below S. Always merged into mp4. |
+| `best available · mp4` (only if no format has a usable dimension) | `-f "bv*+ba/b" --merge-output-format mp4` | Best video plus best audio, or the best combined file. |
 | `audio only · mp3` | `-f "ba/b" -x --audio-format mp3 --audio-quality 0` | Best audio, converted to mp3 at the highest VBR quality. This is the one option that re-encodes. |
 
 Within a height, yt-dlp's own default sort picks the stream. On YouTube that favours AV1/VP9 over H.264, so a `1080p · mp4` choice usually holds VP9 video and Opus audio.
@@ -64,7 +64,7 @@ yt-dlp --load-info-json $TMPDIR/yoinks-info-….json \
   --no-playlist --no-warnings --newline --no-quiet --progress \
   --progress-template "download:YOINK|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s" \
   --print after_move:filepath --no-simulate \
-  -o ~/Downloads/%(title).60s.%(ext)s \
+  -o "~/Downloads/%(title).60B [%(id)s]%(height& {}p|)s.%(ext)s" \
   [--ffmpeg-location <ffmpeg-static path>]
 ```
 
@@ -80,12 +80,30 @@ yt-dlp --load-info-json $TMPDIR/yoinks-info-….json \
 | `--progress-template download:YOINK\|…` | One machine-readable line per update: bytes done, total, estimated total, speed, ETA. |
 | `--print after_move:filepath` | Prints the final file path once the file is in place. |
 | `--no-simulate` | `--print` also implies simulate mode; this makes it actually download. |
-| `-o ~/Downloads/%(title).60s.%(ext)s` | Saves to `~/Downloads`, title cut to 60 characters, no video ID. |
+| `-o ~/Downloads/<template>` | Saves to `~/Downloads` with the name template from `src/lib/naming.ts` (see File names below). |
 | `--ffmpeg-location <path>` | Only when ffmpeg isn't on PATH and the bundled `ffmpeg-static` is used. |
 
 **Retry:** if the cached-JSON attempt fails for any reason, `src/app.tsx` (around line 265) runs the same command again with the URL in place of `--load-info-json`. The intent is to handle expired media URLs, but any error triggers it.
 
 Not passed: cookies, rate limits, subtitles, `--embed-*`, archive files or self-update (`-U`).
+
+## File names
+
+The output template is built once per pick by `outputTemplate` in `src/lib/naming.ts` and reused for the retry, so both attempts write the same path. Choose the style with `--names title` (default) or `--names slug`.
+
+| Style | Template / rule | Example |
+| --- | --- | --- |
+| `title` (default) | `%(title).60B [%(id)s]%(height& {}p\|)s.%(ext)s` (or `width` for vertical video) | `Me at the zoo [jNQXAC9IVRw] 240p.mp4` |
+| `slug` | lowercase ASCII, dashes, computed in Node, then `-<id>` and the resolution | `me-at-the-zoo-jNQXAC9IVRw-240p.mp4` |
+| `slug`, no usable title characters | `video-<service>-<id>` | `video-youtube--yBI43j93TU-1080p.mp4` |
+| audio-only mp3 (either style) | no resolution suffix | `me-at-the-zoo-jNQXAC9IVRw.mp3` |
+
+- **Why the id:** before `6a44df0` the template was `%(title).60s.%(ext)s`. Two different videos with the same first 60 characters mapped to one name; yt-dlp printed "has already been downloaded", exited 0 and printed the first video's path, so yoinks reported success with the wrong file (reproduced 2026-10-21).
+- **Resolution:** the short side of the file actually downloaded. yt-dlp fills in `%(height)s` or `%(width)s`, so a fallback to a smaller format is named truthfully. Several resolutions of one video sit side by side.
+- **Title cut:** 60 bytes (`.60B`), not characters, so multi-byte titles stay well under the 255-byte filename limit.
+- **Slug ids:** case is kept. Ids with characters outside `[A-Za-z0-9_-]` or longer than 40 get cleaned plus an 8-hex sha1 suffix; a missing id falls back to a hash of the url. A slug name never starts with `-`.
+- **Service names** come from yt-dlp's extractor, so X shows as `twitter`.
+- **Migration:** files saved by older yoinks versions (title only) are not recognised as already downloaded.
 
 ## Reading yt-dlp's output
 
@@ -108,7 +126,7 @@ The progress bar, the processing state and the final path all come from parsing 
 On YouTube, yoinks downloads exactly the same streams as plain yt-dlp and only wraps them in a different container. Test video: [All the President's Men, Dahlberg's Check](https://www.youtube.com/watch?v=UmLNzZsEgA4), with yt-dlp 2026.08.19.
 
 - `yt-dlp '<url>'` saved `All the President's Men ｜ Dahlberg's Check ｜ Robert Redford's One Shot ｜ Warner Classics [UmLNzZsEgA4].webm`.
-- yoinks (1080p) saved `All the President's Men ｜ Dahlberg's Check ｜ Robert Redford'.mp4`.
+- yoinks (1080p, before `6a44df0`) saved `All the President's Men ｜ Dahlberg's Check ｜ Robert Redford'.mp4`. Today it would be `… Redford' [UmLNzZsEgA4] 1080p.mp4`.
 
 |  | Plain yt-dlp | yoinks 1080p |
 | --- | --- | --- |
@@ -146,7 +164,7 @@ The 65 KB difference is container overhead; nothing was re-encoded. ffprobe repo
 On X, yoinks and plain yt-dlp produce byte-identical files; only the filename differs. Test post: [Survival Instinct, band-aid handcuffs](https://x.com/SurvivalInstint/status/2111099342325166198).
 
 - Plain yt-dlp: `Survival Instinct - Using a band-aid to set yourself free from handcuffs [2110911926595125248].mp4`
-- yoinks: `Survival Instinct - Using a band-aid to set yourself free fr.mp4`
+- yoinks (before `6a44df0`): `Survival Instinct - Using a band-aid to set yourself free fr.mp4`. Today: `… free fr [2110911926595125248] 720p.mp4`.
 - Both: H.264 video, 720×1280, AAC audio, mp4 container, 20,633,476 bytes, SHA-256 `ab9e376b…`.
 
 X serves H.264/AAC already in mp4, as one combined stream. Nothing needs merging, so `--merge-output-format mp4` has no effect and both tools save the bytes X sent. The same is true of most sites that serve combined H.264 mp4 files; YouTube's separate VP9/Opus streams are the main case where yoinks' output differs.
@@ -164,7 +182,7 @@ yoinks keeps a short recent-URL list, not a download log. It lives at `~/.config
 
 Write errors are ignored, so a failure to save history never breaks a download. As of this guide, the file holds exactly 50 entries, so older downloads have already been dropped.
 
-Other traces of a download: the `$TMPDIR/yoinks-info-*.json` probe files (full metadata, kept until the OS clears them) and the files in `~/Downloads`. Because filenames are cut to 60 characters and have no video ID, a file can't reliably be matched back to its URL.
+Other traces of a download: the `$TMPDIR/yoinks-info-*.json` probe files (full metadata, kept until the OS clears them) and the files in `~/Downloads`. Since `6a44df0` every name carries the video id, so a file can be matched back to its video; files from older versions can't.
 
 ## Gotchas and possible changes
 
@@ -172,7 +190,8 @@ Other traces of a download: the `$TMPDIR/yoinks-info-*.json` probe files (full m
 | --- | --- | --- |
 | `--merge-output-format mp4` with no codec preference | YouTube downloads are VP9/Opus in an `.mp4`, which Apple tools and many editors may not play | Add `-S vcodec:h264,res,acodec:m4a` to get real H.264/AAC mp4s, at the cost of the higher-bitrate VP9/AV1 streams at top resolutions |
 | Size label scored for mp4/H.264 | Estimate can be far off (≈174 MiB shown vs 291 MB downloaded in the YouTube test) | Score the label with yt-dlp's own sort, or adopt the `-S` change so both agree |
-| `%(title).60s` with no `[id]` | Long titles are cut; two videos with the same first 60 characters overwrite each other | Add `  [%(id)s] ` to the template |
+| ~~`%(title).60s` with no `[id]`~~ | ~~Two videos with the same first 60 characters collide~~ | **Fixed in `6a44df0`:** id and resolution are in every name |
+| ~~Vertical videos labelled by the long side~~ | ~~Picker said 1280p for a 720×1280 video~~ | **Fixed in `59eb927`:** labels use the short side |
 | `--no-playlist` everywhere | Playlist and multi-video thread URLs give only one video | Playlist support is on the README roadmap |
 | Retry on any `--load-info-json` failure | A real error runs the full extraction a second time before it shows | Retry only on errors that look like expired URLs |
 | history.json capped at 50, URL only | No lasting record of what was downloaded | Append one line per success to `~/.config/yoinks/downloads.jsonl` (time, URL, title, format, path), optionally keeping the probe JSON beside the video |
