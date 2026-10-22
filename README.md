@@ -33,6 +33,7 @@ automatically.
 
 ```sh
 $ yoinks https://youtu.be/dQw4w9WgXcQ    # straight to the format picker
+$ yoinks --best <url>                   # skip the picker
 $ yoinks                                 # prompts for a url
 $ yoinks --theme light                   # force the light palette
 $ yoinks --names slug https://youtu.be/dQw4w9WgXcQ  # lowercase filename
@@ -44,6 +45,10 @@ hit enter. `esc` goes back, `^c` quits. Or just use the mouse — the yoink
 button, the format list and the footer hints are all clickable, and
 clicking the logo takes you back home. Files are saved to `~/Downloads`,
 and the file path is printed to your terminal when you're done.
+
+Press `^p` or click `res:ask` in the footer to switch to `res:best`, which skips
+the format picker and downloads the highest resolution, for the current session.
+`--best` starts in `res:best`.
 
 The default `auto` theme uses your terminal's own foreground and background,
 so it follows light and dark terminal themes without guessing. Press `^t` or
@@ -91,7 +96,7 @@ To try it as a global command without publishing: `npm link`, then run
 
 ## Roadmap
 
-- [ ] `--best` / `--mp3` flags to skip the picker (scriptable mode)
+- [ ] `--mp3` flag to skip the picker (scriptable mode)
 - [ ] `-o <dir>` to choose the output folder
 - [ ] Playlist / thread-with-multiple-videos support
 - [ ] Clipboard detection: launch bare and auto-suggest the url you copied

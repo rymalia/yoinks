@@ -52,6 +52,26 @@ test('reports naming style errors and leaves the default unset', () => {
   assert.equal(parseArgs([]).namingStyle, undefined)
 })
 
+test('parses --best before and after the url, and leaves the default unset', () => {
+  assert.deepEqual(parseArgs(['--best', 'https://example.com/video']), {
+    help: false,
+    version: false,
+    quality: 'best',
+    initialUrl: 'https://example.com/video',
+  })
+  assert.deepEqual(parseArgs(['https://example.com/video', '--best']), {
+    help: false,
+    version: false,
+    quality: 'best',
+    initialUrl: 'https://example.com/video',
+  })
+  assert.equal(parseArgs([]).quality, undefined)
+})
+
+test('rejects a value form of --best as an unknown option', () => {
+  assert.equal(parseArgs(['--best=x']).error, 'unknown option “--best=x”')
+})
+
 test('recognizes only supported modes and cycles through all of them', () => {
   assert.equal(isThemeMode('auto'), true)
   assert.equal(isThemeMode('light'), true)

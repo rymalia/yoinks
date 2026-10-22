@@ -20,12 +20,14 @@ const HELP = `
   Examples
     $ yoinks https://youtu.be/dQw4w9WgXcQ
     $ yoinks --names slug https://youtu.be/dQw4w9WgXcQ
+    $ yoinks --best <url>                   # skip the picker
     $ yoinks https://x.com/user/status/123456
     $ yoinks                 (prompts for a url)
 
   Options
     --theme <mode>   use auto, light, or dark for this run
     --names <style>  title (default, readable) or slug (lowercase, no spaces)
+    --best           skip the picker and download the highest quality
     -h, --help       show this help
     -v, --version    show version
 
@@ -87,6 +89,7 @@ const {waitUntilExit} = render(
     initialUrl={initialUrl}
     clipboardUrl={clipboardUrl}
     initialThemeMode={initialThemeMode}
+    initialQuality={args.quality ?? 'ask'}
     namingStyle={args.namingStyle ?? 'title'}
     onOutcome={result => (outcome = result)}
   />,

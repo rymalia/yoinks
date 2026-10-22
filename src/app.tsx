@@ -9,7 +9,7 @@ import {FullScreen} from './components/fullscreen.js'
 import {Logo} from './components/logo.js'
 import {Panel} from './components/panel.js'
 import {ProgressBar} from './components/progress-bar.js'
-import {Shortcuts} from './components/shortcuts.js'
+import {hintText, Shortcuts} from './components/shortcuts.js'
 import {TextInput} from './components/text-input.js'
 import {clickTargetAt, findFrameRow, frameRowSpan, type ClickTarget} from './lib/click-map.js'
 import {formatBytes, formatDuration, formatEta, formatSpeed, shortenPath, truncate, wrapText} from './lib/format.js'
@@ -130,6 +130,7 @@ type AppProps = {
   initialUrl?: string
   clipboardUrl?: string
   initialThemeMode?: ThemeMode
+  initialQuality: 'ask' | 'best'
   namingStyle: NamingStyle
   onOutcome: (outcome: Outcome) => void
 }
@@ -150,12 +151,14 @@ export function App({initialThemeMode = 'auto', ...props}: AppProps) {
 function AppContent({
   initialUrl,
   clipboardUrl,
+  initialQuality,
   namingStyle,
   onOutcome,
   cycleTheme,
 }: {
   initialUrl?: string
   clipboardUrl?: string
+  initialQuality: 'ask' | 'best'
   namingStyle: NamingStyle
   onOutcome: (outcome: Outcome) => void
   cycleTheme: () => void
@@ -164,6 +167,9 @@ function AppContent({
   const {exit} = useApp()
   const {stdout} = useStdout()
   const [url, setUrl] = useState(initialUrl ?? '')
+  const [quality, setQuality] = useState(initialQuality)
+  const qualityRef = useRef(quality)
+  qualityRef.current = quality
   const [urlInput, setUrlInput] = useState('')
   const [history, setHistory] = useState(loadHistory)
   const [platform, setPlatform] = useState<Platform>()
@@ -173,6 +179,7 @@ function AppContent({
   const highlightRef = useRef(0) // choice under the cursor, for the ↵ hint click
   const infoJsonRef = useRef<string | undefined>(undefined)
   const abortRef = useRef<AbortController | undefined>(undefined)
+  const startDownloadRef = useRef<(choice: DownloadChoice, videoInfo: VideoInfo | undefined, targetUrl: string) => void>(() => {})
   const [phase, setPhase] = useState<Phase>(initialUrl ? {name: 'probing', status: 'warming up…'} : {name: 'input'})
 
   const columns = stdout?.columns && stdout.columns > 0 ? stdout.columns : 80
@@ -195,9 +202,15 @@ function AppContent({
       if (controller.signal.aborted) return
       infoJsonRef.current = infoJsonPath
       setInfo(videoInfo)
-      setChoices(buildChoices(videoInfo))
+      const nextChoices = buildChoices(videoInfo)
+      setChoices(nextChoices)
       highlightRef.current = 0
-      setPhase({name: 'picking'})
+      const videoChoice = nextChoices.find(choice => choice.kind === 'video')
+      if (qualityRef.current === 'best' && videoChoice) {
+        startDownloadRef.current(videoChoice, videoInfo, targetUrl)
+      } else {
+        setPhase({name: 'picking'})
+      }
     } catch (error) {
       if (controller.signal.aborted) return
       setPhase({name: 'error', message: error instanceof Error ? error.message : String(error)})
@@ -223,8 +236,20 @@ function AppContent({
     setUrlInput(url) // keep the link around so a cancel isn't destructive
   }, [resetToInput, url])
 
+  const toggleQuality = useCallback(() => {
+    setQuality(previous => {
+      const next = previous === 'ask' ? 'best' : 'ask'
+      qualityRef.current = next
+      return next
+    })
+  }, [])
+
   useInput(
     (input, key) => {
+      if (key.ctrl && input === 'p') {
+        toggleQuality()
+        return
+      }
       if (key.ctrl && input === 't') {
         cycleTheme()
         return
@@ -249,9 +274,8 @@ function AppContent({
   const clipboardOffered = Boolean(clipboardUrl) && urlInput === ''
   const clipboardAccepted = Boolean(clipboardUrl) && urlInput === clipboardUrl
 
-  const handlePick = (item: {value: number}) => {
-    const choice = choices[item.value]
-    const template = outputTemplate(namingStyle, info ?? {}, choice.kind)
+  const startDownload = (choice: DownloadChoice, videoInfo: VideoInfo | undefined, targetUrl: string) => {
+    const template = outputTemplate(namingStyle, videoInfo ?? {}, choice.kind)
     const controller = new AbortController()
     abortRef.current = controller
     setPhase({name: 'downloading', choice, processing: false})
@@ -267,7 +291,7 @@ function AppContent({
         const base = {
           ytdlp: ytdlpRef.current,
           ffmpegLocation,
-          url,
+          url: targetUrl,
           choice,
           outDir: OUT_DIR,
           outputTemplate: template,
@@ -285,7 +309,7 @@ function AppContent({
           filepath = await download(base, handlers, controller.signal)
         }
         onOutcome({filepath})
-        setHistory(addToHistory(url))
+        setHistory(addToHistory(targetUrl))
         setPhase({name: 'done', filepath})
       } catch (error) {
         if (controller.signal.aborted) return
@@ -294,7 +318,13 @@ function AppContent({
     })()
   }
 
-  let hints: Array<[string, string]> = [...HINTS[phase.name], ['^t', `theme:${theme.mode}`]]
+  startDownloadRef.current = startDownload
+
+  const handlePick = (item: {value: number}) => {
+    startDownload(choices[item.value]!, info, url)
+  }
+
+  let hints: Array<[string, string]> = [...HINTS[phase.name], ['^p', `res:${quality}`], ['^t', `theme:${theme.mode}`]]
   if (phase.name === 'input' && history.length > 0) {
     hints = [hints[0]!, ['↑', 'history'], ...hints.slice(1)]
   }
@@ -304,6 +334,7 @@ function AppContent({
   // there is no layout math to keep in sync.
   const hintAction = (key: string): (() => void) | undefined => {
     if (key === '^c') return () => exit()
+    if (key === '^p') return toggleQuality
     if (key === '^t') return cycleTheme
     if (key === 'esc') return phase.name === 'probing' || phase.name === 'downloading' ? cancelRun : resetToInput
     if (key === '↵') {
@@ -328,7 +359,7 @@ function AppContent({
   }
   for (const [key, label] of hints) {
     const action = hintAction(key)
-    if (action) clickTargets.push({match: `${key} ${label}`, action})
+    if (action) clickTargets.push({match: hintText(key, label), action})
   }
 
   useMouseClick(

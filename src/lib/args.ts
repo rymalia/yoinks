@@ -7,6 +7,7 @@ export type CliArgs = {
   initialUrl?: string
   themeMode?: ThemeMode
   namingStyle?: NamingStyle
+  quality?: 'ask' | 'best'
   error?: string
 }
 
@@ -20,6 +21,8 @@ export function parseArgs(args: string[]): CliArgs {
       result.help = true
     } else if (arg === '-v' || arg === '--version') {
       result.version = true
+    } else if (arg === '--best') {
+      result.quality = 'best'
     } else if (arg === '--theme') {
       const value = args[++index]
       if (!value) return {...result, error: '--theme needs a value: auto, light, or dark'}
