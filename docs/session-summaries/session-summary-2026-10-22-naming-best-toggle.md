@@ -1,7 +1,7 @@
 ---
 session_id: 8f7e3c85-1f8e-4d54-afb9-74b17576e0fe
 date: 2026-10-22
-time: "2026-10-16 10:21 PM PDT – 2026-10-22 01:08 AM PDT"
+time: "2026-10-16 10:21 PM PDT – 2026-10-22 01:26 AM PDT"
 resumed: "2026-10-21 11:00 PM PDT, 2026-10-22 12:42 AM PDT"
 project: yoinks
 branch: feat/skip-picker
@@ -17,7 +17,13 @@ Since resuming on 2026-10-21 it pointed the repo at the user's fork, finished it
 (file naming) and item 2 (skip the picker) from the user's feature list, fixed the
 picker's resolution labels, updated the guide, and switched the global `yoinks` to a
 link to the local clone. Seven commits sit on `feat/file-naming` → `feat/skip-picker`,
-none pushed.
+plus this summary and a later install-doc fix.
+
+**Update (01:26 AM):** after the summary was first committed, the user cloned the
+fork on a second MacBook, followed `docs/local-install.md` and hit
+`sh: tsup: command not found`. The doc skipped `npm install`; it was fixed in
+`3c61834`. The clone came from GitHub, so at least `feat/skip-picker` has now been
+pushed by the user.
 
 Timestamps: start and resume times come from the SessionStart hook output. The
 metadata collector reported `session_start: 2026-10-22 12:42 AM PDT` because the hook
@@ -50,6 +56,8 @@ re-fires on resume; the true start of this session id was the first hook value,
 | **`4e69bd0` build** | `"prepare": "npm run build"`, version `0.4.0-rymalia` (package.json + lock). |
 | **`e2d7366` docs: `docs/local-install.md`** | How this machine runs the fork, how to tell which yoinks is running, the later GitHub install, npm 12 gotchas. |
 | **Global install** | `npm uninstall -g yoinks` (npm 0.3.1) then `npm link` from `~/projects/yoinks`. |
+| **`0342d81` docs: this session summary** | First version of this file. |
+| **`3c61834` docs: `npm install` before `npm link`** | `docs/local-install.md` setup now runs `npm install` first (it installs tsup and builds `dist/` via `prepare`) and names the `tsup: command not found` error. |
 
 ### Testing / Research Performed
 
@@ -59,12 +67,13 @@ re-fires on resume; the true start of this session id was the first hook value,
 - **Real TUI in Terminal.app:** `--best` skipped the picker and saved `Me at the zoo [jNQXAC9IVRw] 240p.mp4`; `^p` toggled the label live; ask mode still shows the picker; footer read back as one line at 80 columns.
 - **Footer render check** with Ink at 80/60/40 columns: every hint stayed whole.
 - **Git install test:** `npm i -g --prefix <tmp> --allow-git=root git+file:///…#feat/skip-picker` built `dist/` and `yoinks -v` printed `0.4.0-rymalia`. Without `--allow-git` npm 12 refused (`EALLOWGIT`).
+- **Fresh-clone install:** reproduced the second Mac's error in a new `git clone` of `feat/skip-picker` in the scratchpad: `npm run build` failed with `sh: tsup: command not found`; after `npm install`, `dist/cli.js` existed and `node dist/cli.js -v` printed `0.4.0-rymalia`.
 - **Codex passes:** 1 plan review, 5 delegated implementations (gpt-6-luna high), 6 code reviews (gpt-5.6-luna xhigh/high). Findings that changed the code: raw id in title template, tests locking that bug in, wrong README examples, weak hash tests, missing suffix cases.
 - **Not verified:** mouse clicks on footer hints (synthetic clicks never reached the app, not even on a known-good row); the `res:` rename and README wording were not re-reviewed by Codex.
 
 ### Summary Statistics
 
-- Commits: 7 (`6a44df0`, `59eb927`, `3541cf8`, `f82c1cb`, `b5f74e2`, `4e69bd0`, `e2d7366`), none pushed
+- Commits: 9 (`6a44df0`, `59eb927`, `3541cf8`, `f82c1cb`, `b5f74e2`, `4e69bd0`, `e2d7366`, `0342d81`, `3c61834`); `3c61834` and this update are not yet pushed
 - Tests: 17 → 28, all passing
 - New source files: 2 (`naming.ts`, plus tests `naming.test.ts`, `ytdlp.test.ts`)
 - Real downloads verified: 14 naming end-to-end + 1 TUI `--best` run
@@ -74,6 +83,7 @@ re-fires on resume; the true start of this session id was the first hook value,
 - **yt-dlp silently skips existing names:** same output path → "has already been downloaded", exit 0, `--print after_move:filepath` prints the old file. Any future naming change must keep names unique per video and resolution.
 - **yt-dlp template syntax verified:** `%(height&-{}p|)s` gives `-240p` or nothing; `.60B` cuts by bytes. `--print` shows names before yt-dlp's character replacement (`|` → `｜`).
 - **X titles are already shortened** by yt-dlp's extractor (98–114-char default names), so the original 60-char cut was mostly cosmetic. X filenames use the media id, not the post id.
+- **Fresh clones need `npm install` first:** `dist/` is gitignored and tsup is a dev dependency, so `npm run build` / `npm link` on a new clone fails with `sh: tsup: command not found`. `npm install` installs it and builds `dist/` through `prepare`; an existing link then starts working. It worked on the first Mac only because `node_modules` was already there.
 - **npm 12 defaults:** git installs blocked (`--allow-git=root` to allow); dependency install scripts blocked (`ffmpeg-static` never downloads its binary — fine while Homebrew ffmpeg is on PATH). `prepare` still runs when npm packs a git package despite an "install-scripts blocked" warning.
 - **Testing traps hit this session:** zsh needs URLs with `?` quoted; tsx treats `.ts` outside the repo as CommonJS (use `.mts`, or `.tsx` in a dir with `{"type":"module"}`); System Events `click at` and Peekaboo clicks did not reach the Ink app.
 - **Process slip:** one Codex run was started with a shell `&` (untracked); it was killed before touching files and re-run as a tracked background task. One `rm -f *` was blocked by a guard; replaced with `mktemp -d` folders.
@@ -89,7 +99,7 @@ re-fires on resume; the true start of this session id was the first hook value,
 
 Planned next steps, in the order agreed with the user:
 
-- [ ] **Push:** `git push -u origin feat/skip-picker` (includes `feat/file-naming`). User pushes.
+- [ ] **Push the doc fix:** `git push -u origin feat/skip-picker` to publish `3c61834` and this update (user pushes), then on the second Mac pull and run `npm install` in the clone; `yoinks -v` should print `0.4.0-rymalia`.
 - [ ] **Item 4 — readable download log:** new file beside `history.json` (which stays as is) recording time, URL, title, chosen format and output path for each successful download.
 - [ ] **Item 3 — subtitles toggle:** yt-dlp `--write-subs` / `--write-auto-subs`, probably `--embed-subs`; subtitle files should follow the new naming (`…-<id>-1080p.en.vtt`).
 - [ ] **Item 5 — batch URLs:** paste several URLs, download one after another with a pause between; build on `res:best` so a batch doesn't stop at the picker for each video.
