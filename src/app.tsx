@@ -14,6 +14,7 @@ import {TextInput} from './components/text-input.js'
 import {clickTargetAt, findFrameRow, frameRowSpan, type ClickTarget} from './lib/click-map.js'
 import {formatBytes, formatDuration, formatEta, formatSpeed, shortenPath, truncate, wrapText} from './lib/format.js'
 import {addToHistory, loadHistory} from './lib/history.js'
+import {outputTemplate, type NamingStyle} from './lib/naming.js'
 import {detectPlatform, isProbablyUrl, type Platform} from './lib/platforms.js'
 import {useMouseClick} from './lib/use-mouse-click.js'
 import {nextThemeMode, ThemeProvider, type ThemeMode, useTheme} from './theme.js'
@@ -129,6 +130,7 @@ type AppProps = {
   initialUrl?: string
   clipboardUrl?: string
   initialThemeMode?: ThemeMode
+  namingStyle: NamingStyle
   onOutcome: (outcome: Outcome) => void
 }
 
@@ -148,11 +150,13 @@ export function App({initialThemeMode = 'auto', ...props}: AppProps) {
 function AppContent({
   initialUrl,
   clipboardUrl,
+  namingStyle,
   onOutcome,
   cycleTheme,
 }: {
   initialUrl?: string
   clipboardUrl?: string
+  namingStyle: NamingStyle
   onOutcome: (outcome: Outcome) => void
   cycleTheme: () => void
 }) {
@@ -247,6 +251,7 @@ function AppContent({
 
   const handlePick = (item: {value: number}) => {
     const choice = choices[item.value]
+    const template = outputTemplate(namingStyle, info ?? {}, choice.kind)
     const controller = new AbortController()
     abortRef.current = controller
     setPhase({name: 'downloading', choice, processing: false})
@@ -259,7 +264,14 @@ function AppContent({
       }
       try {
         const ffmpegLocation = await findFfmpeg()
-        const base = {ytdlp: ytdlpRef.current, ffmpegLocation, url, choice, outDir: OUT_DIR}
+        const base = {
+          ytdlp: ytdlpRef.current,
+          ffmpegLocation,
+          url,
+          choice,
+          outDir: OUT_DIR,
+          outputTemplate: template,
+        }
         let filepath: string
         try {
           // reuse the probe's metadata — starts immediately instead of re-extracting

@@ -19,13 +19,15 @@ const HELP = `
 
   Examples
     $ yoinks https://youtu.be/dQw4w9WgXcQ
+    $ yoinks --names slug https://youtu.be/dQw4w9WgXcQ
     $ yoinks https://x.com/user/status/123456
     $ yoinks                 (prompts for a url)
 
   Options
-    --theme <mode>  use auto, light, or dark for this run
-    -h, --help      show this help
-    -v, --version   show version
+    --theme <mode>   use auto, light, or dark for this run
+    --names <style>  title (default, readable) or slug (lowercase, no spaces)
+    -h, --help       show this help
+    -v, --version    show version
 
   Downloads are saved to ~/Downloads.
   Powered by yt-dlp — YouTube, X, Instagram, Threads, TikTok & 1800+ sites.
@@ -85,6 +87,7 @@ const {waitUntilExit} = render(
     initialUrl={initialUrl}
     clipboardUrl={clipboardUrl}
     initialThemeMode={initialThemeMode}
+    namingStyle={args.namingStyle ?? 'title'}
     onOutcome={result => (outcome = result)}
   />,
   // keep a copy of every frame so clicks can be hit-tested against it

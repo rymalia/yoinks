@@ -1,10 +1,12 @@
 import {isThemeMode, type ThemeMode} from '../theme.js'
+import {isNamingStyle, type NamingStyle} from './naming.js'
 
 export type CliArgs = {
   help: boolean
   version: boolean
   initialUrl?: string
   themeMode?: ThemeMode
+  namingStyle?: NamingStyle
   error?: string
 }
 
@@ -27,6 +29,15 @@ export function parseArgs(args: string[]): CliArgs {
       const value = arg.slice('--theme='.length)
       if (!isThemeMode(value)) return {...result, error: `unknown theme “${value}” — use auto, light, or dark`}
       result.themeMode = value
+    } else if (arg === '--names') {
+      const value = args[++index]
+      if (!value) return {...result, error: '--names needs a value: title or slug'}
+      if (!isNamingStyle(value)) return {...result, error: `unknown naming style “${value}” — use title or slug`}
+      result.namingStyle = value
+    } else if (arg.startsWith('--names=')) {
+      const value = arg.slice('--names='.length)
+      if (!isNamingStyle(value)) return {...result, error: `unknown naming style “${value}” — use title or slug`}
+      result.namingStyle = value
     } else if (arg.startsWith('-')) {
       return {...result, error: `unknown option “${arg}”`}
     } else {

@@ -28,6 +28,30 @@ test('rejects missing, invalid, and unknown options', () => {
   assert.match(parseArgs(['one', 'two']).error ?? '', /single url/)
 })
 
+test('parses naming style before and after the url', () => {
+  assert.deepEqual(parseArgs(['--names', 'slug', 'https://example.com/video']), {
+    help: false,
+    version: false,
+    namingStyle: 'slug',
+    initialUrl: 'https://example.com/video',
+  })
+  assert.deepEqual(parseArgs(['https://example.com/video', '--names=title']), {
+    help: false,
+    version: false,
+    namingStyle: 'title',
+    initialUrl: 'https://example.com/video',
+  })
+})
+
+test('reports naming style errors and leaves the default unset', () => {
+  assert.equal(parseArgs(['--names']).error, '--names needs a value: title or slug')
+  assert.equal(
+    parseArgs(['--names', 'plain']).error,
+    'unknown naming style “plain” — use title or slug',
+  )
+  assert.equal(parseArgs([]).namingStyle, undefined)
+})
+
 test('recognizes only supported modes and cycles through all of them', () => {
   assert.equal(isThemeMode('auto'), true)
   assert.equal(isThemeMode('light'), true)

@@ -77,10 +77,14 @@ export async function findFfmpeg(): Promise<string | undefined> {
 
 export type VideoInfo = {
   title: string
+  id?: string
   uploader?: string
   duration?: number
   webpage_url?: string
+  extractor?: string
   extractor_key?: string
+  width?: number
+  height?: number
   formats?: RawFormat[]
 }
 
@@ -224,6 +228,7 @@ export function download(
     infoJsonPath?: string
     choice: DownloadChoice
     outDir: string
+    outputTemplate: string
   },
   handlers: DownloadHandlers,
   signal?: AbortSignal,
@@ -244,7 +249,7 @@ export function download(
     'after_move:filepath',
     '--no-simulate',
     '-o',
-    path.join(opts.outDir, '%(title).60s.%(ext)s'),
+    path.join(opts.outDir, opts.outputTemplate),
   ]
   if (opts.ffmpegLocation) args.push('--ffmpeg-location', opts.ffmpegLocation)
 

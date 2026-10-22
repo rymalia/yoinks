@@ -35,6 +35,7 @@ automatically.
 $ yoinks https://youtu.be/dQw4w9WgXcQ    # straight to the format picker
 $ yoinks                                 # prompts for a url
 $ yoinks --theme light                   # force the light palette
+$ yoinks --names slug https://youtu.be/dQw4w9WgXcQ  # lowercase filename
 ```
 
 yoinks takes over the terminal (full-screen, centered — and restores your
@@ -61,6 +62,19 @@ click the theme control in the footer to cycle through `auto`, `light`, and
   on your PATH, with `ffmpeg-static` as a bundled fallback.
 - The UI is [Ink](https://github.com/vadimdemedes/ink) — React for the
   terminal.
+
+### File names
+
+By default, video files are named `<title, max 60 bytes> [<id>] <resolution>.<ext>`. Use
+`yoinks --names slug <url>` for names such as
+`all-the-presidents-men-dahlbergs-check-robert-redfords-one-s-UmLNzZsEgA4-1080p.mp4`.
+The resolution number is the short side of the file actually downloaded; a vertical
+1080×1920 video gets the `1080p` suffix. Audio-only mp3 downloads have no resolution suffix.
+The id prevents yt-dlp from silently skipping a different video with the same
+truncated title. Files saved by older yoinks versions with title-only names
+won't be recognized as already downloaded. Titles with no usable letters (e.g.
+CJK-only) become `video-<site>-<id>-<resolution>.<ext>`, e.g. `video-youtube-<id>-1080p.mp4`; X
+posts show as `twitter` (yt-dlp's name).
 
 ## Development
 
