@@ -6,6 +6,7 @@ import path from 'node:path'
 import {Readable} from 'node:stream'
 import {pipeline} from 'node:stream/promises'
 import {formatBytes} from './format.js'
+import {isPortrait} from './naming.js'
 
 const YOINKS_DIR = path.join(os.homedir(), '.yoinks', 'bin')
 const RELEASE_BASE = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download'
@@ -147,26 +148,27 @@ const MAX_VIDEO_CHOICES = 8
 export function buildChoices(info: VideoInfo): DownloadChoice[] {
   const formats = info.formats ?? []
   const choices: DownloadChoice[] = []
+  const dim = isPortrait(info) ? 'width' : 'height'
 
   const audioOnly = formats.filter(f => f.acodec && f.acodec !== 'none' && (!f.vcodec || f.vcodec === 'none'))
   const bestAudio = [...audioOnly].sort((a, b) => (b.abr ?? b.tbr ?? 0) - (a.abr ?? a.tbr ?? 0))[0]
   const audioSize = bestAudio?.filesize ?? bestAudio?.filesize_approx
 
-  const videos = formats.filter(f => f.vcodec && f.vcodec !== 'none' && f.height)
-  const heights = [...new Set(videos.map(f => f.height as number))].sort((a, b) => b - a)
+  const videos = formats.filter(f => f.vcodec && f.vcodec !== 'none' && typeof f[dim] === 'number' && f[dim]! > 0)
+  const dimensions = [...new Set(videos.map(f => f[dim] as number))].sort((a, b) => b - a)
 
-  for (const height of heights.slice(0, MAX_VIDEO_CHOICES)) {
-    const candidates = videos.filter(f => f.height === height)
+  for (const short of dimensions.slice(0, MAX_VIDEO_CHOICES)) {
+    const candidates = videos.filter(f => f[dim] === short)
     const best = [...candidates].sort((a, b) => scoreVideo(b) - scoreVideo(a))[0]
     const muxed = best.acodec && best.acodec !== 'none'
     const size = (best.filesize ?? best.filesize_approx ?? 0) + (muxed ? 0 : audioSize ?? 0)
     const sizeLabel = size > 0 ? ` · ~${formatBytes(size)}` : ''
     choices.push({
       kind: 'video',
-      label: `${height}p · mp4${sizeLabel}`,
+      label: `${short}p · mp4${sizeLabel}`,
       args: [
         '-f',
-        `bv*[height=${height}]+ba/b[height=${height}]/bv*[height<=${height}]+ba/b`,
+        `bv*[${dim}=${short}]+ba/b[${dim}=${short}]/bv*[${dim}<=${short}]+ba/b`,
         '--merge-output-format',
         'mp4',
       ],
