@@ -24,9 +24,17 @@ The last line tells you how it was installed:
 The npm release (0.3.1) was uninstalled and the clone was linked:
 
 ```sh
-npm uninstall -g yoinks
-cd ~/projects/yoinks && npm run build && npm link
+npm uninstall -g yoinks          # only if the npm release is installed
+cd ~/projects/yoinks
+npm install                      # installs tsup etc. and builds dist/ (via "prepare")
+npm link
 ```
+
+**On a fresh clone (e.g. another Mac), `npm install` must come first.** Running
+`npm run build` or `npm link` before it fails with `sh: tsup: command not found`,
+because tsup is a dev dependency and isn't installed yet. If that already happened,
+just run `npm install` in the clone: it builds `dist/`, and an existing link starts
+working.
 
 What that means day to day:
 
@@ -35,7 +43,7 @@ What that means day to day:
 - **Whatever branch is checked out is what runs.** Switching branches and
   rebuilding switches the app.
 - `dist/` is gitignored, so after a fresh clone or `git clean` you must run
-  `npm run build` or `yoinks` breaks.
+  `npm install` (fresh clone) or `npm run build` (existing clone) or `yoinks` breaks.
 
 ## Later: a fixed install from your GitHub fork
 
