@@ -27,7 +27,8 @@ npx yoinks
 ```
 
 Requires Node 18+. Everything else (yt-dlp, ffmpeg) is fetched or bundled
-automatically.
+automatically. For YouTube, also install [deno](https://deno.com)
+(`brew install deno`) — see [How it works](#how-it-works).
 
 ## Usage
 
@@ -68,6 +69,11 @@ click the theme control in the footer to cycle through `auto`, `light`, and
   GitHub down), it keeps using the copy it has and tries again next run.
 - ffmpeg (needed for merging high-res streams and mp3 extraction) is found
   on your PATH, with `ffmpeg-static` as a bundled fallback.
+- YouTube needs a JavaScript runtime to unlock its full format list, and
+  yt-dlp uses [deno](https://deno.com) by default. Without it, YouTube videos
+  may offer fewer resolutions in the picker (or fail outright). Install it
+  with `brew install deno` or see deno.com; yt-dlp finds it on your PATH.
+  Other sites don't need it.
 - The UI is [Ink](https://github.com/vadimdemedes/ink) — React for the
   terminal.
 
