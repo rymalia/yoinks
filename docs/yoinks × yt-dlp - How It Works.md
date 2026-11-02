@@ -12,13 +12,23 @@ The probe and the download are the only two yt-dlp runs per video; the dashed li
 
 ## Finding yt-dlp and ffmpeg
 
-yoinks uses whatever yt-dlp is already installed and only downloads its own copy as a last resort. `ensureYtDlp` (line 39) tries these in order, checking each with `--version` (10-second timeout, output ignored):
+yoinks uses whatever yt-dlp is already installed and only downloads its own copy as a last resort. `ensureYtDlp` (line 63) tries these in order, checking each with `--version` (10-second timeout):
 
 1. `yt-dlp` on your PATH.
-2. `~/.yoinks/bin/yt-dlp`, a copy from an earlier run.
+2. `~/.yoinks/bin/yt-dlp`, a copy from an earlier run. Before using it, `maybeUpdateYtDlp` (line 95) may check it for updates (see below).
 3. A fresh download from `https://github.com/yt-dlp/yt-dlp/releases/latest/download/<asset>`, where the asset is `yt-dlp_macos`, `yt-dlp.exe`, `yt-dlp_linux` or `yt-dlp_linux_aarch64`. It is saved as `yt-dlp.download`, made executable (`chmod 755`) and renamed into place.
 
-`findFfmpeg` (line 66) does the same for ffmpeg, which is needed to merge separate video and audio streams and to make mp3s:
+### Keeping the downloaded copy current
+
+A system yt-dlp is left to its package manager, but yoinks's own copy would otherwise stay at whatever version the first run fetched. Old copies miss extractor fixes, and builds before 2026.10.21 carry a `certifi` bundle that is open to man-in-the-middle attacks. So when the copy's modification time is a week old or more (or in the future), yoinks:
+
+1. Sends a `HEAD` to `https://github.com/yt-dlp/yt-dlp/releases/latest` with a 5-second timeout, follows the redirect and reads the version from the final `/releases/tag/<version>` URL.
+2. Compares it with the copy's `--version` output. If they differ, it downloads the new binary the same way as a first run (temp file, `chmod`, rename over the old one). If they match, it sets the file's modification time to now, so the next check is a week away.
+3. If anything fails (offline, timeout, odd response, failed download), it keeps the working copy and leaves the modification time alone, so the next run checks again. A cancel by the user still cancels.
+
+It doesn't use yt-dlp's own `-U`: yt-dlp's 2026.10.21 advisory recommends a manual download over the self-updater, and the download goes through Node's TLS rather than the old binary's.
+
+`findFfmpeg` (line 174) does the same for ffmpeg, which is needed to merge separate video and audio streams and to make mp3s:
 
 - If `ffmpeg -version` works on PATH, yoinks passes nothing and yt-dlp finds ffmpeg itself.
 - Otherwise it uses the bundled `ffmpeg-static` binary and passes `--ffmpeg-location <path>`.

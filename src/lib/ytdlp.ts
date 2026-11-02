@@ -33,18 +33,109 @@ function commandWorks(cmd: string, args: string[]): Promise<boolean> {
   })
 }
 
+/** Like commandWorks, but returns trimmed stdout on success (undefined on any failure). */
+function commandOutput(cmd: string, args: string[]): Promise<string | undefined> {
+  return new Promise(resolve => {
+    let child
+    try {
+      child = spawn(cmd, args, {stdio: ['ignore', 'pipe', 'ignore'], timeout: 10_000})
+    } catch {
+      resolve(undefined)
+      return
+    }
+    let out = ''
+    child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()))
+    child.on('error', () => resolve(undefined))
+    child.on('close', code => resolve(code === 0 ? out.trim() : undefined))
+  })
+}
+
 /**
  * Resolve a usable yt-dlp binary: system install first, then a previously
  * downloaded copy, then download the standalone binary from GitHub releases.
+ *
+ * The downloaded copy is ours to keep current (a system install is the user's
+ * package manager's job). Old builds miss extractor fixes and, before
+ * 2026.10.21, carried a certifi bundle open to MITM — so at most once per
+ * UPDATE_CHECK_INTERVAL_MS we compare it against the latest release and swap
+ * in the new binary. Any failure there keeps the working copy we already have.
  */
 export async function ensureYtDlp(onStatus: (message: string) => void, signal?: AbortSignal): Promise<string> {
   if (await commandWorks('yt-dlp', ['--version'])) return 'yt-dlp'
 
   const local = path.join(YOINKS_DIR, process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp')
-  if (await commandWorks(local, ['--version'])) return local
+  const localVersion = await commandOutput(local, ['--version'])
+  if (localVersion !== undefined) {
+    await maybeUpdateYtDlp(local, localVersion, onStatus, signal)
+    return local
+  }
 
   onStatus('first run: fetching yt-dlp…')
-  await fs.mkdir(YOINKS_DIR, {recursive: true})
+  await downloadYtDlp(local, signal)
+  return local
+}
+
+const UPDATE_CHECK_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000
+const UPDATE_CHECK_TIMEOUT_MS = 5_000
+const LATEST_RELEASE_URL = 'https://github.com/yt-dlp/yt-dlp/releases/latest'
+
+/** Whether the cached binary was last downloaded or verified long enough ago to check again. */
+export function isUpdateCheckDue(lastVerifiedMs: number, nowMs: number): boolean {
+  // a clock that moved backwards (or a future mtime) shouldn't suppress checks forever
+  return nowMs - lastVerifiedMs >= UPDATE_CHECK_INTERVAL_MS || lastVerifiedMs > nowMs
+}
+
+/** ".../releases/latest" redirects to ".../releases/tag/<version>"; pull the version out. */
+export function releaseTagFromUrl(url: string): string | undefined {
+  const tag = /\/releases\/tag\/([^/?#]+)/.exec(url)?.[1]
+  return tag ? decodeURIComponent(tag) : undefined
+}
+
+/** Exported for tests; ensureYtDlp is the real entry point. */
+export async function maybeUpdateYtDlp(
+  local: string,
+  localVersion: string,
+  onStatus: (message: string) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  // the binary's mtime doubles as "last verified": set by the download, and
+  // touched after a check that found nothing newer
+  let lastVerifiedMs: number
+  try {
+    lastVerifiedMs = (await fs.stat(local)).mtimeMs
+  } catch {
+    return
+  }
+  const now = Date.now()
+  if (!isUpdateCheckDue(lastVerifiedMs, now)) return
+
+  onStatus('checking for yt-dlp updates…')
+  try {
+    const response = await fetch(LATEST_RELEASE_URL, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: withTimeout(signal, UPDATE_CHECK_TIMEOUT_MS),
+    })
+    const latest = response.ok ? releaseTagFromUrl(response.url) : undefined
+    if (!latest) return // GitHub answered oddly; try again next run
+    if (latest !== localVersion) {
+      onStatus(`updating yt-dlp ${localVersion} → ${latest}…`)
+      await downloadYtDlp(local, signal)
+    } else {
+      const nowDate = new Date(now)
+      await fs.utimes(local, nowDate, nowDate)
+    }
+  } catch (error) {
+    // the user cancelled: let that propagate like any other cancel
+    if (signal?.aborted) throw error
+    // offline, slow, or GitHub down — the cached copy still works, and since
+    // its mtime is unchanged we'll try again next run
+  }
+}
+
+/** Download the standalone binary to a temp file and rename it over `local`. */
+async function downloadYtDlp(local: string, signal?: AbortSignal): Promise<void> {
+  await fs.mkdir(path.dirname(local), {recursive: true})
 
   const url = `${RELEASE_BASE}/${ytDlpAssetName()}`
   const response = await fetch(url, {signal})
@@ -53,10 +144,26 @@ export async function ensureYtDlp(onStatus: (message: string) => void, signal?: 
   }
 
   const tmp = `${local}.download`
-  await pipeline(Readable.fromWeb(response.body as never), createWriteStream(tmp), {signal})
-  await fs.chmod(tmp, 0o755)
-  await fs.rename(tmp, local)
-  return local
+  try {
+    await pipeline(Readable.fromWeb(response.body as never), createWriteStream(tmp), {signal})
+    await fs.chmod(tmp, 0o755)
+    await fs.rename(tmp, local)
+  } catch (error) {
+    await fs.rm(tmp, {force: true})
+    throw error
+  }
+}
+
+/** An AbortSignal that fires on the caller's abort or after `ms`, whichever comes first. */
+function withTimeout(signal: AbortSignal | undefined, ms: number): AbortSignal {
+  const timeout = AbortSignal.timeout(ms)
+  if (!signal) return timeout
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  if (signal.aborted || timeout.aborted) abort()
+  signal.addEventListener('abort', abort, {once: true})
+  timeout.addEventListener('abort', abort, {once: true})
+  return controller.signal
 }
 
 /**
