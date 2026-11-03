@@ -1,6 +1,7 @@
 # Plan: `yoinks meta` — metadata, captions and thumbnails without downloading
 
-Status: design rev 3.1, 2026-11-03. Revs 1, 2 and 3 were each reviewed by Codex
+Status: design rev 3.2, 2026-11-03 — **captions via yt-dlp only in v1** (InnerTube
+provider dropped; see Providers). Earlier: Revs 1, 2 and 3 were each reviewed by Codex
 gpt-5.6-luna xhigh → REVISE; all findings accepted (rev 3.1 = rev-3 fixes). Branch `feat/meta-command`.
 
 ## Why
@@ -131,7 +132,7 @@ yoinks meta --help
       "translated": false, "vssId": "a.en", "name": "English (auto-generated)",
       "format": "json3", "path": "/abs/…", "text": "…"
     }],
-    "providers": {"metadata": "youtube-api", "captions": "innertube", "thumbnail": "youtube-api"},
+    "providers": {"metadata": "youtube-api", "captions": "ytdlp", "thumbnail": "youtube-api"},
     "warnings": [
       {"artifact": "metadata", "kind": "quota", "message": "Data API quota exceeded; used yt-dlp"}
     ],
@@ -162,7 +163,7 @@ yoinks meta --help
 | Need | Primary | Fallback |
 |---|---|---|
 | Metadata | **Data API `videos.list`** when `YOUTUBE_API_KEY` is set — batches of ≤50 IDs, `part=snippet,contentDetails` | yt-dlp `-J --skip-download --no-playlist` in a **new in-memory runner** (`probe()` is not reused: it persists the ~11 MB JSON to `$TMPDIR` and never deletes it). Only selected fields are kept. |
-| Captions | **InnerTube ANDROID player** request → normalise tracks → select → fetch `fmt=json3` (vtt converted locally on request) | yt-dlp `--skip-download --write-subs --write-auto-subs --sub-langs '^<resolved key>$' --sleep-subtitles <n> --sleep-requests 0.75`, where the key is resolved by first reading `-J` caption entries (original track = URL with no `tlang`) |
+| Captions | **yt-dlp only (v1):** read the caption entries from the same in-memory `-J` result used for metadata → normalise + select with `tracks.ts` (origin from each URL's `lang`/`tlang`) → download exactly that track with `--skip-download --write-subs --write-auto-subs --sub-langs '^<ytdlpKey>$' --sub-format <fmt> --sleep-subtitles <n> --sleep-requests 0.75` into the staging dir | none (an InnerTube provider was designed and dropped, below) |
 | Thumbnail | The API's best returned URL (`maxres` → `standard` → `high`) when the key is set; otherwise probe `i.ytimg.com/vi/<id>/maxresdefault.jpg` → `hqdefault.jpg` | yt-dlp `--write-thumbnail`, adding `--convert-thumbnails jpg` when a new `hasFfmpeg()` (ffmpeg on PATH **or** bundled) is true, plus `--ffmpeg-location` only when `findFfmpeg()` returns a path (it returns `undefined` for PATH ffmpeg, `ytdlp.ts:175`) |
 
 - **The API key is optional everywhere**, for `meta` and for any future yoinks
@@ -179,14 +180,15 @@ yoinks meta --help
   body; dimensions from the API or by reading the JPEG SOF header; if
   undecodable, `width`/`height` are `null` (not an error).
 - Non-YouTube URLs: yt-dlp provider only.
-- InnerTube is unofficial and will break: one module, client constants in one
-  place. A non-429 failure of the **player** request (or a parse failure) falls
-  through to the yt-dlp caption provider with a `provider` warning. "No
-  matching track" from InnerTube **also** falls through once (yt-dlp's default
-  clients are `tv_samsung, visionos, web`, `_video.py:143`, and can expose
-  tracks the ANDROID response lacks), with a `provider` warning; the item is
-  `unavailable` only when both providers find no match. This also covers
-  tracks YouTube silently withholds for want of a PO token.
+- **Why no InnerTube provider in v1:** yoinks would have to impersonate the
+  YouTube Android app with a hardcoded app key — code of our own that a
+  Claude Code safety check refused to run during design (2026-11-03). It is
+  also unnecessary: once the exact original track is requested, yt-dlp
+  downloaded captions straight after four 429s from the same IP. yt-dlp
+  remains the only component talking to YouTube's unofficial endpoints, and
+  it is maintained upstream. `tracks.ts` keeps its pure InnerTube parser
+  (tested, no I/O) so the option stays open; revisit only with the user's
+  explicit approval and evidence from a batch run.
 - yt-dlp reports YouTube refusing subtitles for want of a PO token
   (`_video.py:4261-4287`) → `login_required`, never `unavailable`.
 
@@ -201,7 +203,9 @@ type CaptionCandidate = {
   translated: boolean       // URL carries tlang — kept only so it can be excluded
   vssId: string | null      // InnerTube ".en", "a.en", ".en.abc123"; null from yt-dlp
   name: string | null
-  fetch: {provider: 'innertube' | 'ytdlp', url: string, ytdlpKey: string | null}
+  provider: 'innertube' | 'ytdlp'
+  url: string               // absolute http(s); entries without one are dropped
+  ytdlpKey: string | null   // key for --sub-langs '^<key>$'; null for InnerTube
 }
 ```
 
@@ -217,7 +221,8 @@ type CaptionCandidate = {
 - **yt-dlp, YouTube:** for every entry under `subtitles` (manual) and
   `automatic_captions` (ASR), read the entry's `url` query: `tlang` present ⇒
   `translated: true` (dropped); else `sourceLang = lang` query value (minus an
-  `a-`/`a.` prefix).
+  `a-`/`a.` prefix). An entry whose URL is not absolute http(s) or whose `lang`
+  is missing/empty is **dropped** — the key is never used as a fallback.
 - **yt-dlp, other extractors:** caption URLs carry no language guarantee
   (e.g. Vimeo keys by language and its URL has no `lang`,
   `extractor/vimeo.py:293-297`), so `sourceLang` = the map key (minus a
@@ -231,8 +236,9 @@ type CaptionCandidate = {
   2. manual, `sourceLang` starts with `L-`; ties → the one equal to
      `audioLanguage`, then the one whose vssId has no variant suffix (a
      `null` vssId sorts after any vssId), then lowest `sourceLang`
-     lexicographically, then provider order (InnerTube before yt-dlp), then
-     input order;
+     lexicographically (so for ASR `en` beats `en-gb` unless `audioLanguage`
+     is `en-GB`), then provider order (InnerTube before yt-dlp), then input
+     order;
   3. ASR with `sourceLang == L` or starting with `L-`; ties as in 2.
 - If nothing matches, the item gets `captions: []` + an `unavailable` error
   listing the source languages that *do* exist. A Ukrainian ASR track is never
@@ -247,17 +253,15 @@ type CaptionCandidate = {
   an injected `sleep(ms)` so tests run instantly. Default `--sleep 3` between
   caption fetches, plus ±30% jitter.
 - Request timeout 20 s per HTTP call (AbortSignal), 120 s per yt-dlp process.
-- **429 policy (native HTTP — InnerTube player, `timedtext`, Data API,
-  `ytimg`):** classified per endpoint; honour `Retry-After` (seconds or
+- **429 policy (native HTTP — Data API, `ytimg`):** classified per endpoint; honour `Retry-After` (seconds or
   HTTP-date, capped at 300 s), otherwise backoff 30 s → 90 s with ±30%
   jitter; at most 3 attempts per request.
 - **429 policy (yt-dlp fallback):** yoinks cannot see response headers from a
   child process, so stderr containing `HTTP Error 429` is classified
   `rate_limited`; retried with the fixed 30 s → 90 s backoff, at most 3 runs.
-- **No cross-provider fallback after a caption 429.** A 429 on the InnerTube
-  *player* request still falls through to yt-dlp (yt-dlp uses different
-  clients for the player); a 429 on `timedtext` does not (both providers fetch
-  captions from it). The item records `rate_limited, retryable: true`.
+- A caption 429 is retried per the yt-dlp policy above and then recorded as
+  `rate_limited, retryable: true`; there is no other caption provider to
+  fall back to.
 - **Circuit breaker (captions only):** an item counts as rate-limited when its
   *final* caption attempt for any requested language ended in 429. Two
   consecutive such items open the breaker for the rest of the run: later items
@@ -293,7 +297,6 @@ src/lib/meta/
   ids.ts          URL → {extractor, videoId} (watch, youtu.be, shorts, embed, live, m., music.)
   tracks.ts       CaptionCandidate normalisation + selection (pure)
   youtube-api.ts  videos.list batching, error classification
-  innertube.ts    player request, captionTracks → candidates, json3 fetch
   ytdlp-meta.ts   in-memory -J runner, field extraction, caption/thumbnail fallback (reuses ensureYtDlp/findFfmpeg)
   thumbnail.ts    URL choice, fetch, content-type + SOF dimension read
   pacing.ts       sleep injection, jitter, Retry-After parsing, 429 circuit breaker

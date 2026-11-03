@@ -37,12 +37,15 @@ test('parseVssId distinguishes ASR, manual and manual variants', () => {
   assert.equal(parseVssId('en'), null)
 })
 
-test('fixture sanity: bare `en` on the dubbed video is mostly translations, last one from uk', () => {
+test('bare `en` entries on the dubbed video normalise as translations from their real source', () => {
   const bare = dubbed.automatic_captions!['en']!
   assert.ok(bare.length > 10)
   const last = bare[bare.length - 1]!
-  assert.equal(lang(last.url!), 'uk')
-  assert.equal(tlang(last.url!), 'en')
+  assert.equal(lang(last.url!), 'uk') // fixture guard: yt-dlp would pick this one
+  const candidates = candidatesFromYtdlp(dubbed)
+  const fromLast = candidates.find((c) => c.url === last.url)!
+  assert.equal(fromLast.translated, true)
+  assert.equal(fromLast.sourceLang, 'uk')
 })
 
 test('dubbed video: selects the original English ASR track, never a translation', () => {
@@ -81,8 +84,9 @@ test('regional -orig keys still resolve for the base language', () => {
   const candidates = candidatesFromYtdlp(dubbedRegional)
   const pt = selectTrack(candidates, 'pt')
   assert.ok(pt, 'pt-BR-orig satisfies pt')
-  assert.ok(pt.sourceLang === 'pt' || pt.sourceLang.startsWith('pt-'))
+  assert.equal(pt.sourceLang, 'pt-br') // from the URL's lang=pt-BR
   assert.equal(pt.kind, 'asr')
+  assert.equal(pt.ytdlpKey, 'pt-BR-orig')
 })
 
 test('manual captions beat ASR for the same language', () => {
@@ -150,11 +154,67 @@ test('no captions at all yields no candidates and no languages', () => {
   assert.deepEqual(availableLanguages(candidates), [])
 })
 
-test('availableLanguages lists originals only', () => {
-  const langs = availableLanguages(candidatesFromYtdlp(dubbed))
-  assert.ok(langs.includes('en'))
-  assert.ok(langs.includes('uk'))
-  assert.deepEqual(langs, [...langs].sort())
+test('availableLanguages lists originals only, sorted and distinct', () => {
+  const base = {kind: 'asr' as const, vssId: null, name: null, provider: 'ytdlp' as const, ytdlpKey: null}
+  const candidates: CaptionCandidate[] = [
+    {...base, sourceLang: 'uk', translated: false, url: 'https://y/1'},
+    {...base, sourceLang: 'en', translated: false, url: 'https://y/2'},
+    {...base, sourceLang: 'en', translated: false, url: 'https://y/3'},
+    {...base, sourceLang: 'zz', translated: true, url: 'https://y/4'},
+  ]
+  assert.deepEqual(availableLanguages(candidates), ['en', 'uk'])
+})
+
+test('YouTube entries with a malformed URL or no lang are dropped, not keyed', () => {
+  const info: YtdlpCaptionInfo = {
+    extractor_key: 'Youtube',
+    automatic_captions: {
+      en: [
+        {ext: 'json3', url: 'not-a-url'},
+        {ext: 'json3', url: 'https://www.youtube.com/api/timedtext?v=x&lang=&fmt=json3'},
+        {ext: 'json3', url: 'https://www.youtube.com/api/timedtext?v=x&fmt=json3'},
+        {ext: 'json3', url: 'file:///etc/passwd?lang=en'},
+      ],
+    },
+  }
+  assert.deepEqual(candidatesFromYtdlp(info), [])
+  assert.equal(selectTrack(candidatesFromYtdlp(info), ''), null)
+})
+
+test('ASR markers in lang values are stripped (a-en, a.en)', () => {
+  const info: YtdlpCaptionInfo = {
+    extractor_key: 'Youtube',
+    automatic_captions: {
+      'en-orig': [{ext: 'json3', url: 'https://y/t?v=x&lang=a-en'}],
+      'de-orig': [{ext: 'json3', url: 'https://y/t?v=x&lang=a.de'}],
+    },
+  }
+  assert.deepEqual(candidatesFromYtdlp(info).map((c) => c.sourceLang), ['en', 'de'])
+})
+
+test('a lang query that differs from the key wins (key is not trusted on YouTube)', () => {
+  const info: YtdlpCaptionInfo = {
+    extractor_key: 'Youtube',
+    automatic_captions: {'en-orig': [{ext: 'json3', url: 'https://y/t?v=x&lang=uk'}]},
+  }
+  const [c] = candidatesFromYtdlp(info)
+  assert.equal(c!.sourceLang, 'uk')
+  assert.equal(selectTrack(candidatesFromYtdlp(info), 'en'), null)
+})
+
+test('ASR: regional track beats exact only when it matches the audio language', () => {
+  const base = {kind: 'asr' as const, translated: false, vssId: null, name: null, provider: 'ytdlp' as const, ytdlpKey: null}
+  const candidates: CaptionCandidate[] = [
+    {...base, sourceLang: 'en', url: 'https://y/en'},
+    {...base, sourceLang: 'en-gb', url: 'https://y/gb'},
+  ]
+  assert.equal(selectTrack(candidates, 'en', 'en-GB')!.url, 'https://y/gb')
+  assert.equal(selectTrack(candidates, 'en')!.url, 'https://y/en', 'lexicographic: en < en-gb')
+  assert.equal(selectTrack(candidates, 'en', 'en')!.url, 'https://y/en')
+})
+
+test('InnerTube tracks with a non-http baseUrl are dropped', () => {
+  assert.deepEqual(candidatesFromInnertube([{baseUrl: 'javascript:alert(1)', vssId: '.en', languageCode: 'en'}]), [])
 })
 
 // InnerTube shapes. These lists are hand-built from the documented

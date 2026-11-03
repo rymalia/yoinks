@@ -43,11 +43,13 @@ export function canonicalLang(tag: string): string {
   return tag.trim().replace(/_/g, '-').toLowerCase()
 }
 
-function queryOf(url: string): URLSearchParams {
+/** Query parameters of an absolute http(s) URL, or null when it is not one. */
+function queryOf(url: string): URLSearchParams | null {
   try {
-    return new URL(url).searchParams
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.searchParams : null
   } catch {
-    return new URLSearchParams()
+    return null
   }
 }
 
@@ -84,16 +86,20 @@ export function candidatesFromYtdlp(info: YtdlpCaptionInfo, ext = 'json3'): Capt
     for (const [key, entries] of Object.entries(map ?? {})) {
       for (const entry of entries ?? []) {
         if (!entry?.url || (entry.ext && entry.ext !== ext)) continue
+        const q = queryOf(entry.url)
+        if (!q) continue // not a fetchable URL
         let sourceLang: string
         let translated: boolean
         if (isYouTube) {
-          const q = queryOf(entry.url)
+          // Origin comes from the URL only; never fall back to the key.
+          const lang = canonicalLang(stripAsrPrefix(q.get('lang') ?? ''))
+          if (!lang) continue
           translated = q.has('tlang')
-          const lang = q.get('lang')
-          sourceLang = canonicalLang(stripAsrPrefix(lang ?? key.replace(/-orig$/, '')))
+          sourceLang = lang
         } else {
           translated = false
           sourceLang = canonicalLang(key.replace(/-orig$/, ''))
+          if (!sourceLang) continue
         }
         const candidate: CaptionCandidate = {
           sourceLang,
@@ -163,6 +169,8 @@ export function candidatesFromInnertube(
   const seen = new Set<string>()
   for (const track of tracks ?? []) {
     if (!track?.baseUrl || seen.has(track.baseUrl)) continue
+    const q = queryOf(track.baseUrl)
+    if (!q) continue // not a fetchable URL
     seen.add(track.baseUrl)
     const parsed = track.vssId ? parseVssId(track.vssId) : null
     const fallbackKind: CaptionKind = track.kind === 'asr' ? 'asr' : 'manual'
@@ -182,7 +190,7 @@ export function candidatesFromInnertube(
     out.push({
       sourceLang,
       kind,
-      translated: queryOf(track.baseUrl).has('tlang'),
+      translated: q.has('tlang'),
       vssId: track.vssId ?? null,
       name: trackName(track.name),
       provider: 'innertube',
