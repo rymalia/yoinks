@@ -44,14 +44,7 @@ export function outputTemplate(
     .replace(/-+$/g, '')
   const title = slugify(info.title ?? '')
 
-  const rawId = info.id
-  const cleanId = rawId?.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) ?? ''
-  const changedId = Boolean(rawId) && cleanId !== rawId
-  const idPart = rawId
-    ? changedId
-      ? `${cleanId}-${hash(rawId)}`
-      : cleanId
-    : hashFallback(info)
+  const idPart = info.id ? safeIdPart(info.id) : hashFallback(info)
   const service = title ? '' : slugify(info.extractor ?? '')
   const prefix = title || (service ? `video-${service}` : 'video')
   const literal = `${prefix}-${idPart}`
@@ -94,6 +87,16 @@ function isPositiveNumber(value: number | undefined): value is number {
 
 function hashFallback(info: {id?: string; title?: string; webpage_url?: string}): string {
   return hash(info.webpage_url || info.title || 'video')
+}
+
+/**
+ * Filename-safe form of an extractor id: keeps `[A-Za-z0-9_-]`, caps at 40
+ * characters, and appends an 8-hex sha1 of the raw id when anything changed,
+ * so two different ids never collapse to the same name.
+ */
+export function safeIdPart(rawId: string): string {
+  const cleanId = rawId.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
+  return cleanId === rawId ? cleanId : `${cleanId}-${hash(rawId)}`
 }
 
 function hash(value: string): string {
