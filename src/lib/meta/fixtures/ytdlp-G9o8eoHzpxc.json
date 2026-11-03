@@ -1,0 +1,667 @@
+{
+ "id": "G9o8eoHzpxc",
+ "extractor_key": "Youtube",
+ "language": "en-US",
+ "live_status": "not_live",
+ "subtitles": {},
+ "automatic_captions": {
+  "ar-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ar&variant=timing-optimized&fmt=json3",
+    "name": "Arabic (Original)"
+   }
+  ],
+  "ar": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ar&variant=timing-optimized&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=bn&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=nl-NL&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=en&variant=gemini&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=fr-FR&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=iw&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=hi&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=id&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=it&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ja&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ko&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ml&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pl&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pt-BR&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pa&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ru&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=es-US&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ta&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=uk&variant=timing-optimized&tlang=ar&fmt=json3",
+    "name": "Arabic"
+   }
+  ],
+  "en": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ar&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=bn&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=nl-NL&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=en&variant=gemini&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=fr-FR&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=iw&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=hi&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=id&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=it&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ja&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ko&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ml&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pl&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pt-BR&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pa&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ru&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=es-US&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ta&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=uk&variant=timing-optimized&tlang=en&fmt=json3",
+    "name": "English"
+   }
+  ],
+  "fr": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ar&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=bn&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=nl-NL&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=en&variant=gemini&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=fr-FR&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=iw&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=hi&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=id&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=it&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ja&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ko&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ml&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pl&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pt-BR&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pa&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ru&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=es-US&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ta&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=uk&variant=timing-optimized&tlang=fr&fmt=json3",
+    "name": "French"
+   }
+  ],
+  "de": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ar&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=bn&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=nl-NL&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=en&variant=gemini&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=fr-FR&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=iw&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=hi&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=id&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=it&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ja&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ko&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ml&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pl&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pt-BR&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pa&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ru&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=es-US&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ta&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=uk&variant=timing-optimized&tlang=de&fmt=json3",
+    "name": "German"
+   }
+  ],
+  "uk": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ar&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=bn&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=nl-NL&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=en&variant=gemini&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=fr-FR&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=iw&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=hi&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=id&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=it&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ja&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ko&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ml&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pl&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pt-BR&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pa&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ru&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=es-US&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ta&variant=timing-optimized&tlang=uk&fmt=json3",
+    "name": "Ukrainian"
+   },
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=uk&variant=timing-optimized&fmt=json3",
+    "name": "Ukrainian"
+   }
+  ],
+  "bn-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=bn&variant=timing-optimized&fmt=json3",
+    "name": "Bangla (Original)"
+   }
+  ],
+  "nl-NL-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=nl-NL&variant=timing-optimized&fmt=json3",
+    "name": "Dutch (Netherlands) (Original)"
+   }
+  ],
+  "en-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=en&variant=gemini&fmt=json3",
+    "name": "English (Original)"
+   }
+  ],
+  "fr-FR-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=fr-FR&variant=timing-optimized&fmt=json3",
+    "name": "French (France) (Original)"
+   }
+  ],
+  "de-DE-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&fmt=json3",
+    "name": "German (Germany) (Original)"
+   }
+  ],
+  "de-DE": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=de-DE&variant=timing-optimized&fmt=json3",
+    "name": "German (Germany)"
+   }
+  ],
+  "iw-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=iw&variant=timing-optimized&fmt=json3",
+    "name": "Hebrew (Original)"
+   }
+  ],
+  "hi-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=hi&variant=timing-optimized&fmt=json3",
+    "name": "Hindi (Original)"
+   }
+  ],
+  "id-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=id&variant=timing-optimized&fmt=json3",
+    "name": "Indonesian (Original)"
+   }
+  ],
+  "it-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=it&variant=timing-optimized&fmt=json3",
+    "name": "Italian (Original)"
+   }
+  ],
+  "ja-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ja&variant=timing-optimized&fmt=json3",
+    "name": "Japanese (Original)"
+   }
+  ],
+  "ko-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ko&variant=timing-optimized&fmt=json3",
+    "name": "Korean (Original)"
+   }
+  ],
+  "ml-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ml&variant=timing-optimized&fmt=json3",
+    "name": "Malayalam (Original)"
+   }
+  ],
+  "pl-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pl&variant=timing-optimized&fmt=json3",
+    "name": "Polish (Original)"
+   }
+  ],
+  "pt-BR-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pt-BR&variant=timing-optimized&fmt=json3",
+    "name": "Portuguese (Brazil) (Original)"
+   }
+  ],
+  "pa-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=pa&variant=timing-optimized&fmt=json3",
+    "name": "Punjabi (Original)"
+   }
+  ],
+  "ru-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ru&variant=timing-optimized&fmt=json3",
+    "name": "Russian (Original)"
+   }
+  ],
+  "es-US-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=es-US&variant=timing-optimized&fmt=json3",
+    "name": "Spanish (United States) (Original)"
+   }
+  ],
+  "ta-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=ta&variant=timing-optimized&fmt=json3",
+    "name": "Tamil (Original)"
+   }
+  ],
+  "uk-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=G9o8eoHzpxc&caps=asr&kind=asr&lang=uk&variant=timing-optimized&fmt=json3",
+    "name": "Ukrainian (Original)"
+   }
+  ]
+ },
+ "_note": "Captured 2026-11-03 with yt-dlp 2026.10.26 (-J). Trimmed: json3 entries only; automatic_captions limited to -orig keys plus a few bare keys; URL queries reduced to v/lang/tlang/kind/name/fmt/caps/variant."
+}
