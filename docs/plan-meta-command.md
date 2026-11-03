@@ -1,7 +1,7 @@
 # Plan: `yoinks meta` — metadata, captions and thumbnails without downloading
 
-Status: design rev 3, 2026-11-03. Rev 1 and rev 2 were each reviewed by Codex
-gpt-5.6-luna xhigh → REVISE; all findings accepted. Branch `feat/meta-command`.
+Status: design rev 3.1, 2026-11-03. Revs 1, 2 and 3 were each reviewed by Codex
+gpt-5.6-luna xhigh → REVISE; all findings accepted (rev 3.1 = rev-3 fixes). Branch `feat/meta-command`.
 
 ## Why
 
@@ -33,8 +33,9 @@ auto-dubbed audio). yt-dlp 2026.10.26 adds the original track twice, as
 `<lang>-orig` and as a bare `<lang>` key without `tlang`
 (`yt_dlp/extractor/youtube/_video.py:4309-4334`), and it also appends every
 *translation* into the same bare key — `--list-subs` showed `en` with the
-format list repeated ~25 times. `--sub-format json3` took the first match, a
-`lang=uk&tlang=en` machine translation, which was throttled. `en-orig` is the
+format list repeated ~25 times. `--sub-format json3` took a `json3` entry
+(yt-dlp picks the *last* match, `YoutubeDL.py:3203`) — a
+`lang=uk&tlang=en` machine translation — which was throttled. `en-orig` is the
 only key guaranteed to be the original. **Track choice, not download mode,
 decides success** — and a track's origin must be read from its URL's
 `lang`/`tlang` query parameters, never inferred from the key name. Note also
@@ -73,7 +74,9 @@ yoinks meta --help
   `meta` wins over everything else (prints meta help, exit 0, no input read);
   empty input (no URLs and no/empty `--file`); `--file` or `--output-dir`
   without a value; unknown flag; `--sub-langs` / `--sub-format` without
-  `--subs`; `--sleep` not a finite number ≥ 0; unreadable `--file`.
+  `--subs`; `--sub-format` not `json3`/`vtt`; `--sub-langs` empty or with an
+  empty/invalid entry (allowed: letters, digits, `-`, `_`, comma-separated);
+  `--sleep` not a finite number ≥ 0; unreadable `--file`.
 - Inputs: positional URLs and `--file` may be combined; `--file -` reads stdin;
   blank lines and `#` comments ignored; duplicates (after normalising to
   `videoId` for YouTube, exact string otherwise) are collapsed, keeping first
@@ -92,6 +95,10 @@ yoinks meta --help
   `<stem>.thumb.<ext>` (`jpg` unless the fallback had no ffmpeg to convert, in
   which case the real extension, e.g. `webp`) and
   `<stem>.<sourceLang>.<kind>.<fmt>` (e.g. `1W-4jx8g7N0.en.asr.json3`).
+  Selected tracks are de-duplicated by URL before writing: if several
+  requested languages pick the same track it is written once and its single
+  caption entry lists them all in `requestedLangs`. The thumbnail's real
+  extension is always taken from the file actually produced.
 - **Writes are atomic:** native providers write `<name>.tmp-<pid>` then rename;
   the yt-dlp fallback writes into a fresh staging dir
   (`<output-dir>/.yoinks-staging-<pid>-<n>/`) with `--force-overwrites`, and
@@ -120,7 +127,7 @@ yoinks meta --help
     "thumbnail": {"url": "https://i.ytimg.com/vi/…/maxresdefault.jpg",
                   "width": 1280, "height": 720, "path": "/abs/…/1W-4jx8g7N0.thumb.jpg"},
     "captions": [{
-      "sourceLang": "en", "requestedLang": "en", "kind": "asr",
+      "sourceLang": "en", "requestedLangs": ["en"], "kind": "asr",
       "translated": false, "vssId": "a.en", "name": "English (auto-generated)",
       "format": "json3", "path": "/abs/…", "text": "…"
     }],
@@ -156,7 +163,7 @@ yoinks meta --help
 |---|---|---|
 | Metadata | **Data API `videos.list`** when `YOUTUBE_API_KEY` is set — batches of ≤50 IDs, `part=snippet,contentDetails` | yt-dlp `-J --skip-download --no-playlist` in a **new in-memory runner** (`probe()` is not reused: it persists the ~11 MB JSON to `$TMPDIR` and never deletes it). Only selected fields are kept. |
 | Captions | **InnerTube ANDROID player** request → normalise tracks → select → fetch `fmt=json3` (vtt converted locally on request) | yt-dlp `--skip-download --write-subs --write-auto-subs --sub-langs '^<resolved key>$' --sleep-subtitles <n> --sleep-requests 0.75`, where the key is resolved by first reading `-J` caption entries (original track = URL with no `tlang`) |
-| Thumbnail | The API's best returned URL (`maxres` → `standard` → `high`) when the key is set; otherwise probe `i.ytimg.com/vi/<id>/maxresdefault.jpg` → `hqdefault.jpg` | yt-dlp `--write-thumbnail`, adding `--convert-thumbnails jpg --ffmpeg-location` only when `findFfmpeg()` returns a path |
+| Thumbnail | The API's best returned URL (`maxres` → `standard` → `high`) when the key is set; otherwise probe `i.ytimg.com/vi/<id>/maxresdefault.jpg` → `hqdefault.jpg` | yt-dlp `--write-thumbnail`, adding `--convert-thumbnails jpg` when a new `hasFfmpeg()` (ffmpeg on PATH **or** bundled) is true, plus `--ffmpeg-location` only when `findFfmpeg()` returns a path (it returns `undefined` for PATH ffmpeg, `ytdlp.ts:175`) |
 
 - **The API key is optional everywhere**, for `meta` and for any future yoinks
   feature. No key → yt-dlp metadata.
@@ -175,8 +182,11 @@ yoinks meta --help
 - InnerTube is unofficial and will break: one module, client constants in one
   place. A non-429 failure of the **player** request (or a parse failure) falls
   through to the yt-dlp caption provider with a `provider` warning. "No
-  matching track" is not a failure and does not fall through (both providers
-  see the same track list).
+  matching track" from InnerTube **also** falls through once (yt-dlp's default
+  clients are `tv_samsung, visionos, web`, `_video.py:143`, and can expose
+  tracks the ANDROID response lacks), with a `provider` warning; the item is
+  `unavailable` only when both providers find no match. This also covers
+  tracks YouTube silently withholds for want of a PO token.
 - yt-dlp reports YouTube refusing subtitles for want of a PO token
   (`_video.py:4261-4287`) → `login_required`, never `unavailable`.
 
@@ -204,18 +214,25 @@ type CaptionCandidate = {
   between `vssId` and `languageCode` is logged on stderr (debug) and `vssId`
   is used. The ANDROID client does not return `translationLanguages`, so
   InnerTube never yields translated candidates.
-- **yt-dlp:** for every entry under `subtitles` (manual) and
+- **yt-dlp, YouTube:** for every entry under `subtitles` (manual) and
   `automatic_captions` (ASR), read the entry's `url` query: `tlang` present ⇒
   `translated: true` (dropped); else `sourceLang = lang` query value (minus an
-  `a-`/`a.` prefix). The key name is used only as `ytdlpKey` for the fallback
+  `a-`/`a.` prefix).
+- **yt-dlp, other extractors:** caption URLs carry no language guarantee
+  (e.g. Vimeo keys by language and its URL has no `lang`,
+  `extractor/vimeo.py:293-297`), so `sourceLang` = the map key (minus a
+  trailing `-orig`), `translated: false`, `kind` from `subtitles` vs
+  `automatic_captions`. The key name is used only as `ytdlpKey` for the fallback
   download, preferring the `<lang>-orig` key for ASR originals and
   de-duplicating identical URLs.
 - **Selection for requested language L** (first rule with a hit wins, per
   requested language; translated candidates are never eligible in v1):
   1. manual, `sourceLang == L`;
   2. manual, `sourceLang` starts with `L-`; ties → the one equal to
-     `audioLanguage`, then the one whose vssId has no variant suffix, then
-     lowest `sourceLang` lexicographically, then provider order;
+     `audioLanguage`, then the one whose vssId has no variant suffix (a
+     `null` vssId sorts after any vssId), then lowest `sourceLang`
+     lexicographically, then provider order (InnerTube before yt-dlp), then
+     input order;
   3. ASR with `sourceLang == L` or starting with `L-`; ties as in 2.
 - If nothing matches, the item gets `captions: []` + an `unavailable` error
   listing the source languages that *do* exist. A Ukrainian ASR track is never
