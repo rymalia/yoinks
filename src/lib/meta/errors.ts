@@ -51,9 +51,29 @@ function stringify(raw: unknown, seen = new Set<unknown>()): string {
   }
 }
 
+const registered = new Set<string>()
+
+/**
+ * Default redaction ignores very short values: a real key is dozens of
+ * characters, and redacting a 1–7 character string would mangle ordinary
+ * words in every message. Explicit `secrets` passed to sanitize() are used
+ * as given.
+ */
+const MIN_SECRET_LENGTH = 8
+
+/**
+ * Make a secret known to {@link sanitize}'s default list. The key may reach
+ * the providers through dependencies rather than the environment, so every
+ * entry point registers the key it actually uses.
+ */
+export function registerSecret(secret: string | null | undefined): void {
+  if (secret && secret.length >= MIN_SECRET_LENGTH) registered.add(secret)
+}
+
 /** Redact secrets and API-key query parameters from text before it is exposed. */
 export function sanitize(text: string, secrets?: string[]): string {
-  const candidates = secrets ?? (process.env.YOUTUBE_API_KEY ? [process.env.YOUTUBE_API_KEY] : [])
+  const envKey = process.env.YOUTUBE_API_KEY
+  const candidates = secrets ?? [...registered, ...(envKey && envKey.length >= MIN_SECRET_LENGTH ? [envKey] : [])]
   const forms = new Set<string>()
   for (const secret of candidates) {
     if (!secret) continue

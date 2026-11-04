@@ -58,6 +58,33 @@ click the theme control in the footer to cycle through `auto`, `light`, and
 
 <img src="assets/download-options.png" alt="yoinks format picker — resolutions with estimated file sizes, plus audio-only mp3" width="100%">
 
+## `yoinks meta` — metadata, captions and thumbnails, no download
+
+A scriptable subcommand for pipelines: one JSON document per run, nothing
+interactive.
+
+```sh
+$ yoinks meta https://youtu.be/dQw4w9WgXcQ                 # title, description, channel, duration…
+$ yoinks meta --file urls.txt --json --subs --thumbnail    # captions + thumbnail per url
+$ yoinks meta --subs --sub-langs en,de --sub-format vtt <url>
+```
+
+- Captions are selected from yt-dlp's caption list, and only the track in the
+  requested language itself is fetched: manual first, then auto-generated, never
+  a machine translation (those are what YouTube rate-limits). Files are named
+  `<id>.<lang>.<manual|asr>.<json3|vtt>` in `~/Downloads/yoinks-meta` (or
+  `--output-dir`), and the JSON carries the plain transcript text as well.
+- With `YOUTUBE_API_KEY` set, YouTube metadata and thumbnails come from the Data
+  API (50 videos per quota unit). Without it, everything comes from yt-dlp, and
+  thumbnails from `i.ytimg.com`. Other sites always go through yt-dlp.
+- Exit codes: `0` (missing captions are reported in `errors[]` as
+  `unavailable` but are not fatal), `1` an item failed, `2` usage error.
+  Items run one at a time with `--sleep` seconds between caption fetches;
+  two consecutive rate-limited videos pause caption fetching for the rest
+  of the run (`circuit_open`), metadata and thumbnails continue.
+
+The full schema and provider rules are in `docs/plan-meta-command.md`.
+
 ## How it works
 
 - Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp). On first run,

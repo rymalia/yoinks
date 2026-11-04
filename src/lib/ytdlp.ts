@@ -183,6 +183,12 @@ export async function findFfmpeg(): Promise<string | undefined> {
   return undefined
 }
 
+/** Whether yt-dlp will find an ffmpeg at all: on PATH, or the bundled ffmpeg-static. */
+export async function hasFfmpeg(): Promise<boolean> {
+  if (await commandWorks('ffmpeg', ['-version'])) return true
+  return (await findFfmpeg()) !== undefined
+}
+
 export type VideoInfo = {
   title: string
   id?: string

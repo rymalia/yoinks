@@ -1,4 +1,5 @@
 import React from 'react'
+import {readFileSync} from 'node:fs'
 import {createRequire} from 'node:module'
 import {render} from 'ink'
 import {App, type Outcome} from './app.js'
@@ -11,11 +12,26 @@ import {isProbablyUrl} from './lib/platforms.js'
 // can't drift from a hardcoded constant
 const VERSION: string = createRequire(import.meta.url)('../package.json').version
 
+// `yoinks meta ...` is a non-interactive subcommand with its own flags and
+// exit codes; it never touches the TUI, the clipboard or the terminal modes.
+if (process.argv[2] === 'meta') {
+  const {metaMain} = await import('./lib/meta/cli.js')
+  const code = await metaMain(process.argv.slice(3), {
+    stdout: text => new Promise<void>(resolve => process.stdout.write(text, () => resolve())),
+    stderr: text => process.stderr.write(text),
+    readStdin: () => readFileSync(0, 'utf8'),
+    env: process.env,
+    version: VERSION,
+  })
+  process.exit(code)
+}
+
 const HELP = `
   yoinks — yoink any video. paste. yoink. done.
 
   Usage
     $ yoinks [url]
+    $ yoinks meta <url...>   (metadata, captions, thumbnail — no download; see yoinks meta --help)
 
   Examples
     $ yoinks https://youtu.be/dQw4w9WgXcQ

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {fail, metaError, ok, sanitize, type MetaErrorKind} from './errors.js'
+import {fail, metaError, ok, registerSecret, sanitize, type MetaErrorKind} from './errors.js'
 
 const sentinel = 'AbC+/= 9&x'
 
@@ -30,6 +30,12 @@ test('sanitize uses a non-empty YOUTUBE_API_KEY by default', () => {
     if (previous === undefined) delete process.env.YOUTUBE_API_KEY
     else process.env.YOUTUBE_API_KEY = previous
   }
+})
+
+test('registerSecret feeds the default list; short values are ignored', () => {
+  registerSecret('k')
+  registerSecret('registered-secret-value')
+  assert.equal(sanitize('ok k ok registered-secret-value'), 'ok k ok REDACTED')
 })
 
 test('metaError sanitizes Error causes and applies retry defaults by kind', () => {
