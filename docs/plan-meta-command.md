@@ -1,7 +1,8 @@
 # Plan: `yoinks meta` — metadata, captions and thumbnails without downloading
 
-Status: design rev 3.2, 2026-11-03 — **captions via yt-dlp only in v1** (InnerTube
-provider dropped; see Providers). Earlier: Revs 1, 2 and 3 were each reviewed by Codex
+Status: design rev 3.3, 2026-11-03 — **captions via yt-dlp only in v1** (InnerTube
+provider dropped; see Providers; rev 3.3 scopes the selection rules to yt-dlp and
+keeps non-http(s) caption URLs for non-YouTube extractors). Earlier: Revs 1, 2 and 3 were each reviewed by Codex
 gpt-5.6-luna xhigh → REVISE; all findings accepted (rev 3.1 = rev-3 fixes). Branch `feat/meta-command`.
 
 ## Why
@@ -26,6 +27,7 @@ pause** (shares the URL-list input and pacing).
 | yt-dlp `--write-auto-subs --sub-langs en` (default and `player_client=android`) | ❌ HTTP 429, 4/4 attempts |
 | same, **with media download** (`-f worstaudio`) | ❌ 429 — subs are fetched *before* media, so the media download aborted too |
 | yt-dlp `--write-auto-subs --sub-langs en-orig` | ✅ 172 KB json3, immediately after the 429s |
+| **`yoinks meta` batch, 20 random corpus videos, `--subs --thumbnail --sleep 3`, Data API key set (2026-11-03 16:18 PST)** | ✅ 4 min 45 s, exit 0, **0 × 429**; 17 caption files (14 ASR originals, 3 manual), 3 videos with no English track (`unavailable`), 20 thumbnails, no staging dirs left behind |
 | youtube-pp-cli `videos-transcript` (InnerTube ANDROID `/youtubei/v1/player` → `captionTracks[].baseUrl` → `fmt=json3`) | ✅ 4/4 fresh fetches (it also caches locally; a 5th run said "(from cache)") |
 
 **Root cause of the 429s:** the test video has ASR tracks in several
@@ -194,7 +196,9 @@ yoinks meta --help
 
 ### Caption-track selection (`src/lib/meta/tracks.ts`, pure)
 
-Both providers are normalised into one candidate shape before selecting:
+yt-dlp's caption maps are normalised into one candidate shape before selecting.
+The parked InnerTube parser produces the same shape, so the rules below cover
+both, but only yt-dlp candidates exist in v1:
 
 ```ts
 type CaptionCandidate = {
@@ -204,7 +208,8 @@ type CaptionCandidate = {
   vssId: string | null      // InnerTube ".en", "a.en", ".en.abc123"; null from yt-dlp
   name: string | null
   provider: 'innertube' | 'ytdlp'
-  url: string               // absolute http(s); entries without one are dropped
+  url: string               // absolute http(s) for YouTube/InnerTube (others dropped);
+                            // other extractors may give relative forms yt-dlp resolves
   ytdlpKey: string | null   // key for --sub-langs '^<key>$'; null for InnerTube
 }
 ```
@@ -212,7 +217,7 @@ type CaptionCandidate = {
 - **Canonicalisation:** language tags lower-cased with `_` → `-`
   (`en_GB` → `en-gb`); comparisons are on canonical tags only. Output keeps
   the canonical form.
-- **InnerTube:** if `vssId` is present it wins: `a.<lang>` ⇒ ASR,
+- **InnerTube (parked, not a v1 provider):** if `vssId` is present it wins: `a.<lang>` ⇒ ASR,
   `.<lang>[.<variant>]` ⇒ manual, `sourceLang = <lang>`; otherwise
   `kind === "asr"` ⇒ ASR and `sourceLang = languageCode`. A disagreement
   between `vssId` and `languageCode` is logged on stderr (debug) and `vssId`
@@ -227,9 +232,11 @@ type CaptionCandidate = {
   (e.g. Vimeo keys by language and its URL has no `lang`,
   `extractor/vimeo.py:293-297`), so `sourceLang` = the map key (minus a
   trailing `-orig`), `translated: false`, `kind` from `subtitles` vs
-  `automatic_captions`. The key name is used only as `ytdlpKey` for the fallback
-  download, preferring the `<lang>-orig` key for ASR originals and
-  de-duplicating identical URLs.
+  `automatic_captions`. Relative, protocol-relative and `data:` URLs are kept
+  (yt-dlp resolves them itself). The key name is used only as `ytdlpKey` for
+  the download, preferring the `<lang>-orig` key for ASR originals and
+  de-duplicating identical URLs. An empty key is dropped on every extractor
+  (it would become `--sub-langs '^$'`).
 - **Selection for requested language L** (first rule with a hit wins, per
   requested language; translated candidates are never eligible in v1):
   1. manual, `sourceLang == L`;
@@ -237,8 +244,8 @@ type CaptionCandidate = {
      `audioLanguage`, then the one whose vssId has no variant suffix (a
      `null` vssId sorts after any vssId), then lowest `sourceLang`
      lexicographically (so for ASR `en` beats `en-gb` unless `audioLanguage`
-     is `en-GB`), then provider order (InnerTube before yt-dlp), then input
-     order;
+     is `en-GB`), then provider order (InnerTube before yt-dlp — moot in v1,
+     where every candidate is yt-dlp's), then input order;
   3. ASR with `sourceLang == L` or starting with `L-`; ties as in 2.
 - If nothing matches, the item gets `captions: []` + an `unavailable` error
   listing the source languages that *do* exist. A Ukrainian ASR track is never

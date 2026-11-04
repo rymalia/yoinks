@@ -27,7 +27,11 @@ export type CaptionCandidate = {
   vssId: string | null
   name: string | null
   provider: CaptionProvider
-  /** Fetch URL for the track (any `fmt` query is left as the provider gave it). */
+  /**
+   * Fetch URL for the track (any `fmt` query is left as the provider gave it).
+   * Absolute http(s) for YouTube and InnerTube; other extractors may give a
+   * relative form that only yt-dlp resolves.
+   */
   url: string
   /** yt-dlp subtitle key to pass as `--sub-langs '^<key>$'`; null for InnerTube. */
   ytdlpKey: string | null
@@ -41,6 +45,15 @@ export type SelectedTrack = CaptionCandidate & {
 /** Lower-case and use `-` separators: `en_GB` → `en-gb`. */
 export function canonicalLang(tag: string): string {
   return tag.trim().replace(/_/g, '-').toLowerCase()
+}
+
+/**
+ * A canonical tag that is safe as a file-name component. Language values
+ * come from yt-dlp keys and caption URLs; anything outside letters, digits
+ * and `-` (so `..`, `/`, `\`, spaces) is rejected rather than cleaned.
+ */
+export function isSafeLang(tag: string): boolean {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(tag)
 }
 
 /** Query parameters of an absolute http(s) URL, or null when it is not one. */
@@ -80,26 +93,33 @@ export type YtdlpCaptionInfo = {
  */
 export function candidatesFromYtdlp(info: YtdlpCaptionInfo, ext = 'json3'): CaptionCandidate[] {
   const isYouTube = (info.extractor_key ?? '').toLowerCase() === 'youtube'
-  const byUrl = new Map<string, CaptionCandidate>()
+  // De-duplicate only true repeats (same track, kind and language); two keys
+  // that share a URL but name different languages both survive, so a
+  // request for either still finds its candidate.
+  const byTrack = new Map<string, CaptionCandidate>()
 
   const add = (map: YtdlpSubtitleMap | null | undefined, kind: CaptionKind) => {
     for (const [key, entries] of Object.entries(map ?? {})) {
       for (const entry of entries ?? []) {
-        if (!entry?.url || (entry.ext && entry.ext !== ext)) continue
-        const q = queryOf(entry.url)
-        if (!q) continue // not a fetchable URL
+        // The key is what `--sub-langs '^<key>$'` must match; an empty one
+        // would become `^$` and never fetch anything.
+        if (!key || !entry?.url || (entry.ext && entry.ext !== ext)) continue
         let sourceLang: string
         let translated: boolean
         if (isYouTube) {
           // Origin comes from the URL only; never fall back to the key.
+          const q = queryOf(entry.url)
+          if (!q) continue // not a fetchable URL
           const lang = canonicalLang(stripAsrPrefix(q.get('lang') ?? ''))
-          if (!lang) continue
+          if (!isSafeLang(lang)) continue
           translated = q.has('tlang')
           sourceLang = lang
         } else {
+          // Other extractors may hand yt-dlp relative or protocol-relative
+          // URLs; yt-dlp resolves those itself, so only the key matters here.
           translated = false
           sourceLang = canonicalLang(key.replace(/-orig$/, ''))
-          if (!sourceLang) continue
+          if (!isSafeLang(sourceLang)) continue
         }
         const candidate: CaptionCandidate = {
           sourceLang,
@@ -111,9 +131,10 @@ export function candidatesFromYtdlp(info: YtdlpCaptionInfo, ext = 'json3'): Capt
           url: entry.url,
           ytdlpKey: key,
         }
-        const existing = byUrl.get(entry.url)
+        const trackKey = `${kind}\u0000${sourceLang}\u0000${translated}\u0000${entry.url}`
+        const existing = byTrack.get(trackKey)
         if (!existing || (key.endsWith('-orig') && !existing.ytdlpKey?.endsWith('-orig'))) {
-          byUrl.set(entry.url, candidate)
+          byTrack.set(trackKey, candidate)
         }
       }
     }
@@ -121,7 +142,7 @@ export function candidatesFromYtdlp(info: YtdlpCaptionInfo, ext = 'json3'): Capt
 
   add(info.subtitles, 'manual')
   add(info.automatic_captions, 'asr')
-  return [...byUrl.values()]
+  return [...byTrack.values()]
 }
 
 // ---------------------------------------------------------------------------
@@ -168,10 +189,9 @@ export function candidatesFromInnertube(
   const out: CaptionCandidate[] = []
   const seen = new Set<string>()
   for (const track of tracks ?? []) {
-    if (!track?.baseUrl || seen.has(track.baseUrl)) continue
+    if (!track?.baseUrl) continue
     const q = queryOf(track.baseUrl)
     if (!q) continue // not a fetchable URL
-    seen.add(track.baseUrl)
     const parsed = track.vssId ? parseVssId(track.vssId) : null
     const fallbackKind: CaptionKind = track.kind === 'asr' ? 'asr' : 'manual'
     const fallbackLang = track.languageCode ? canonicalLang(track.languageCode) : null
@@ -186,7 +206,11 @@ export function candidatesFromInnertube(
         )
       }
     }
-    if (!sourceLang) continue
+    if (!sourceLang || !isSafeLang(sourceLang)) continue
+    // de-duplicate true repeats only, after normalisation (same rule as yt-dlp)
+    const trackKey = `${kind}\u0000${sourceLang}\u0000${q.has('tlang')}\u0000${track.baseUrl}`
+    if (seen.has(trackKey)) continue
+    seen.add(trackKey)
     out.push({
       sourceLang,
       kind,

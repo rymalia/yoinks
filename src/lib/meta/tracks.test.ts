@@ -142,6 +142,63 @@ test('non-YouTube extractors take the language from the key (no lang in URL)', (
   ])
 })
 
+test('non-YouTube extractors keep relative, protocol-relative and data: URLs', () => {
+  const info: YtdlpCaptionInfo = {
+    extractor_key: 'Vimeo',
+    subtitles: {
+      en: [{ext: 'json3', url: '//cdn.example/sub.json3'}],
+      fr: [{ext: 'json3', url: '/texttrack/456.json3'}],
+      de: [{ext: 'json3', url: 'data:text/plain,WEBVTT'}],
+    },
+  }
+  assert.deepEqual(candidatesFromYtdlp(info).map((c) => [c.sourceLang, c.url]), [
+    ['en', '//cdn.example/sub.json3'],
+    ['fr', '/texttrack/456.json3'],
+    ['de', 'data:text/plain,WEBVTT'],
+  ])
+  assert.equal(selectTrack(candidatesFromYtdlp(info), 'fr')!.ytdlpKey, 'fr')
+})
+
+test('language values that are not safe file-name components are dropped', () => {
+  const other: YtdlpCaptionInfo = {
+    extractor_key: 'Vimeo',
+    subtitles: {'../../outside': [{ext: 'json3', url: 'https://v/1'}], 'en us': [{ext: 'json3', url: 'https://v/2'}], 'pt-BR': [{ext: 'json3', url: 'https://v/3'}]},
+  }
+  assert.deepEqual(candidatesFromYtdlp(other).map((c) => c.sourceLang), ['pt-br'])
+  const youtube: YtdlpCaptionInfo = {extractor_key: 'Youtube', subtitles: {en: [{ext: 'json3', url: 'https://y/t?lang=..%2F..%2Fx'}]}}
+  assert.deepEqual(candidatesFromYtdlp(youtube), [])
+  assert.deepEqual(candidatesFromInnertube([{baseUrl: 'https://y/t', vssId: '.en/../x', languageCode: 'en'}]), [])
+})
+
+test('two keys sharing a URL but naming different languages both survive', () => {
+  const info: YtdlpCaptionInfo = {
+    extractor_key: 'Vimeo',
+    subtitles: {en: [{ext: 'json3', url: 'https://v/same'}], 'en-GB': [{ext: 'json3', url: 'https://v/same'}]},
+  }
+  const candidates = candidatesFromYtdlp(info)
+  assert.deepEqual(candidates.map((c) => c.sourceLang), ['en', 'en-gb'])
+  const {selected, missing} = selectTracks(candidates, ['en-gb'])
+  assert.deepEqual(missing, [])
+  assert.equal(selected[0]!.ytdlpKey, 'en-GB')
+})
+
+test('a manual track is never replaced by an ASR entry with the same URL', () => {
+  const info: YtdlpCaptionInfo = {
+    extractor_key: 'Youtube',
+    subtitles: {en: [{ext: 'json3', url: 'https://y/t?lang=en'}]},
+    automatic_captions: {'en-orig': [{ext: 'json3', url: 'https://y/t?lang=en'}]},
+  }
+  const pick = selectTrack(candidatesFromYtdlp(info), 'en')
+  assert.equal(pick!.kind, 'manual')
+})
+
+test('an empty subtitle key is dropped on every extractor (it would become --sub-langs ^$)', () => {
+  const youtube: YtdlpCaptionInfo = {extractor_key: 'Youtube', automatic_captions: {'': [{ext: 'json3', url: 'https://y/t?lang=en'}]}}
+  const other: YtdlpCaptionInfo = {extractor_key: 'Vimeo', subtitles: {'': [{ext: 'json3', url: 'https://v/t'}]}}
+  assert.deepEqual(candidatesFromYtdlp(youtube), [])
+  assert.deepEqual(candidatesFromYtdlp(other), [])
+})
+
 test('entries in other formats are ignored', () => {
   const info: YtdlpCaptionInfo = {extractor_key: 'Youtube', subtitles: {en: [{ext: 'vtt', url: 'https://y/t?lang=en'}]}}
   assert.equal(candidatesFromYtdlp(info).length, 0)
@@ -272,6 +329,15 @@ test('InnerTube before yt-dlp when everything else ties', () => {
     {...base, vssId: null, provider: 'innertube', url: 'https://y/2', ytdlpKey: null},
   ]
   assert.equal(selectTrack(candidates, 'en')!.provider, 'innertube')
+})
+
+test('InnerTube: two tracks sharing a URL but naming different languages both survive; true repeats collapse', () => {
+  const candidates = candidatesFromInnertube([
+    it({baseUrl: 'https://y/same', vssId: '.en', languageCode: 'en'}),
+    it({baseUrl: 'https://y/same', vssId: '.en-GB', languageCode: 'en-GB'}),
+    it({baseUrl: 'https://y/same', vssId: '.en', languageCode: 'en'}),
+  ])
+  assert.deepEqual(candidates.map((c) => c.sourceLang), ['en', 'en-gb'])
 })
 
 test('InnerTube: tracks with tlang, missing baseUrl or no language are handled', () => {
