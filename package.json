@@ -1,6 +1,6 @@
 {
   "name": "yoinks",
-  "version": "0.4.0-rymalia",
+  "version": "0.5.0-rymalia",
   "description": "yoink any video from YouTube, X, Instagram, Threads & 1800+ sites — right from your terminal. paste. yoink. done.",
   "type": "module",
   "bin": {
